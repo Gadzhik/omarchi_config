@@ -47,6 +47,13 @@ info "Copying configuration files into \$HOME"
 cp -a "$DIR/home/." "$HOME/"
 chmod +x "$HOME"/.local/bin/* 2>/dev/null || true
 
+info "Making zsh the default login shell"
+if [[ ${SHELL:-} != */zsh ]] && command -v zsh >/dev/null; then
+  sudo chsh -s /usr/bin/zsh "$USER" 2>/dev/null || warn "run: chsh -s /usr/bin/zsh"
+fi
+# Seed zsh history from bash so autosuggestions have data on first launch
+[[ -f $HOME/.bash_history && ! -s $HOME/.zsh_history ]] && cp "$HOME/.bash_history" "$HOME/.zsh_history"
+
 # ---------------------------------------------------------------------------
 # 4. Default applications
 # ---------------------------------------------------------------------------

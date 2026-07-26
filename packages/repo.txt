@@ -38,6 +38,13 @@ openvpn
 wireshark-qt         # Wireshark GUI (pulls wireshark-cli); add user to 'wireshark' group to capture as non-root
 tcpdump
 
+# --- Shell: zsh + plugins (default login shell; see home/.zshrc) ---
+zsh
+zsh-autosuggestions
+zsh-syntax-highlighting
+zsh-completions
+zsh-history-substring-search
+
 # --- Containers ---
 docker
 docker-compose

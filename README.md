@@ -57,6 +57,8 @@ OpenVPN, Docker (+ compose), QEMU/KVM + libvirt + virt-manager (+ edk2-ovmf, swt
 | `elephant/clipboard.toml` | Clipboard history **max_items = 233** (walker/SUPER+V; images supported) |
 | `mimeapps.list` | **VLC** default video/audio player; **Firefox** default browser |
 | `.bashrc` | **fzf** (Ctrl+R/Ctrl+T/`**`) + **ble.sh** (fish/zsh-like autosuggestions) |
+| `.zshrc` | **zsh** as login shell + zsh-autosuggestions + syntax-highlighting + starship/mise/fzf/zoxide + Omarchy aliases |
+| `alacritty/alacritty.toml` | Also forces `zsh` as the terminal shell (`[terminal.shell]`) |
 | `.config/mise/config.toml` | Node.js version pin |
 | `.config/omarchy/backgrounds/Tokyo Night/abstract-fakurian.jpg` | Clean abstract wallpaper (Milad Fakurian), Tokyo Night theme kept |
 
