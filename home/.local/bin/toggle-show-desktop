@@ -1,0 +1,35 @@
+#!/bin/bash
+# "Show desktop" toggle for Hyprland (a tiling WM has no real minimize).
+# First press: hide every window of the active workspace into a special
+# scratch workspace, leaving the bare desktop. Second press: bring them back.
+
+SPECIAL=minimized
+
+active_ws=$(hyprctl activeworkspace -j | python3 -c 'import json,sys;print(json.load(sys.stdin)["id"])')
+
+# Windows currently stashed away.
+mapfile -t hidden < <(hyprctl clients -j | python3 -c "
+import json,sys
+for c in json.load(sys.stdin):
+    if c['workspace']['name'] == 'special:$SPECIAL':
+        print(c['address'])
+")
+
+if (( ${#hidden[@]} )); then
+  # Restore: pull everything back onto the active workspace.
+  for a in "${hidden[@]}"; do
+    hyprctl dispatch movetoworkspacesilent "$active_ws,address:$a" >/dev/null
+  done
+else
+  # Hide: stash every window of the active workspace.
+  mapfile -t wins < <(hyprctl clients -j | python3 -c "
+import json,sys
+aws = $active_ws
+for c in json.load(sys.stdin):
+    if c['workspace']['id'] == aws:
+        print(c['address'])
+")
+  for a in "${wins[@]}"; do
+    hyprctl dispatch movetoworkspacesilent "special:$SPECIAL,address:$a" >/dev/null
+  done
+fi
