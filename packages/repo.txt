@@ -17,6 +17,22 @@ dbeaver
 # --- AI / local LLM ---
 ollama
 
+# --- File manager: Thunar (default, replaces Nautilus) + plugins ---
+thunar
+thunar-volman            # auto-mount removable media
+thunar-archive-plugin    # create/extract archives from context menu
+thunar-media-tags-plugin # edit audio tags, rename by tags
+tumbler                  # thumbnail service
+ffmpegthumbnailer        # video thumbnails
+gvfs                     # trash, mounting, network
+gvfs-mtp                 # Android / MTP devices
+gvfs-gphoto2             # cameras
+gvfs-smb                 # Windows/SMB shares
+gvfs-afc                 # iOS devices
+gvfs-nfs                 # NFS shares
+xarchiver                # backend for thunar-archive-plugin
+catfish                  # file search
+
 # --- Media ---
 vlc
 ffmpeg
