@@ -1,0 +1,53 @@
+#!/bin/bash
+# Per-window keyboard layout for Hyprland.
+# Hyprland keeps the xkb layout global; this daemon remembers which layout
+# each window was last using and re-applies it when that window regains focus.
+# Layout switching itself is still done by the normal grp: toggle key.
+
+SOCK="${XDG_RUNTIME_DIR}/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.socket2.sock"
+
+declare -A WIN_LAYOUT   # window address -> layout index (0=us, 1=ru ...)
+CUR_ADDR=""
+
+# Physical keyboards to drive (skip virtual / fcitx / power / video / hotkey devices).
+mapfile -t KBDS < <(hyprctl devices -j | python3 -c '
+import json,sys
+skip=("virtual","fcitx","power","video","hotkey")
+for k in json.load(sys.stdin)["keyboards"]:
+    n=k["name"]
+    if "keyboard" in n and not any(s in n for s in skip):
+        print(n)
+')
+# Fallback: if nothing matched, drive every keyboard Hyprland reports.
+if [[ ${#KBDS[@]} -eq 0 ]]; then
+  mapfile -t KBDS < <(hyprctl devices -j | python3 -c 'import json,sys;[print(k["name"]) for k in json.load(sys.stdin)["keyboards"]]')
+fi
+
+layout_index() { case "$1" in *Russian*) echo 1 ;; *) echo 0 ;; esac; }
+
+apply_layout() {
+  local idx="$1" k
+  for k in "${KBDS[@]}"; do
+    hyprctl switchxkblayout "$k" "$idx" >/dev/null 2>&1
+  done
+}
+
+# Seed with the currently focused window.
+CUR_ADDR="$(hyprctl activewindow -j | python3 -c 'import json,sys;print(json.load(sys.stdin).get("address","").removeprefix("0x"))' 2>/dev/null)"
+
+socat -u UNIX-CONNECT:"$SOCK" - 2>/dev/null | while IFS= read -r line; do
+  ev="${line%%>>*}"; data="${line#*>>}"
+  case "$ev" in
+    activewindowv2)
+      CUR_ADDR="${data#0x}"
+      apply_layout "${WIN_LAYOUT[$CUR_ADDR]:-0}"
+      ;;
+    activelayout)
+      # data is "KEYBOARDNAME,Layout Name"; store it for the focused window.
+      [[ -n $CUR_ADDR ]] && WIN_LAYOUT[$CUR_ADDR]="$(layout_index "${data#*,}")"
+      ;;
+    closewindow)
+      unset 'WIN_LAYOUT[${data#0x}]'
+      ;;
+  esac
+done

@@ -1,0 +1,47 @@
+#!/bin/bash
+# Adjust the system for AC vs battery power.
+#   On AC      -> 165Hz, balanced profile, restore saved brightness
+#   On battery -> 60Hz,  power-saver profile, dim brightness
+# Launched from Hyprland autostart; reacts to power_supply udev events.
+
+MONITOR=eDP-1
+RES=3072x1920
+SCALE=1.6
+AC=/sys/class/power_supply/ADP1/online
+AC_RATE=165
+BAT_RATE=60
+BAT_BRIGHTNESS=40    # percent while on battery
+
+STATE_FILE="${XDG_RUNTIME_DIR:-/tmp}/power-mode.state"
+SAVED_BRIGHTNESS="${XDG_RUNTIME_DIR:-/tmp}/power-mode.brightness"
+
+on_ac() { [[ "$(cat "$AC" 2>/dev/null)" == "1" ]]; }
+
+apply() {
+  local now prev=""
+  if on_ac; then now=ac; else now=battery; fi
+  [[ -f "$STATE_FILE" ]] && prev="$(cat "$STATE_FILE")"
+  [[ "$now" == "$prev" ]] && return    # only act on real transitions
+  echo "$now" >"$STATE_FILE"
+
+  if [[ "$now" == "battery" ]]; then
+    # Remember current brightness so we can restore it on AC.
+    brightnessctl -m | cut -d, -f4 | tr -d '%' >"$SAVED_BRIGHTNESS"
+    hyprctl keyword monitor "$MONITOR,$RES@$BAT_RATE,auto,$SCALE" >/dev/null 2>&1
+    powerprofilesctl set power-saver 2>/dev/null
+    brightnessctl set "${BAT_BRIGHTNESS}%" >/dev/null 2>&1
+  else
+    hyprctl keyword monitor "$MONITOR,$RES@$AC_RATE,auto,$SCALE" >/dev/null 2>&1
+    powerprofilesctl set balanced 2>/dev/null
+    [[ -f "$SAVED_BRIGHTNESS" ]] && brightnessctl set "$(cat "$SAVED_BRIGHTNESS")%" >/dev/null 2>&1
+  fi
+}
+
+# Stored state may be stale after a reboot, so force a fresh apply on launch.
+rm -f "$STATE_FILE"
+apply
+
+# React to every AC adapter / battery change reported by udev.
+stdbuf -oL udevadm monitor --udev --subsystem-match=power_supply 2>/dev/null | while read -r _; do
+  apply
+done

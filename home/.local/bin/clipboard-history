@@ -1,0 +1,3 @@
+#!/bin/bash
+# Pick an entry from the cliphist history via walker (dmenu mode) and copy it.
+cliphist list | walker --dmenu | cliphist decode | wl-copy

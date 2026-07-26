@@ -1,0 +1,13 @@
+# AUR packages (installed with yay / omarchy pkg aur add)
+# One package per line; lines starting with # are ignored.
+
+postman-bin          # Postman API client
+lmstudio-bin         # LM Studio (local LLM GUI)
+slack-desktop        # Slack
+android-studio       # Android Studio
+pgadmin4             # pgAdmin 4 (pulls pgadmin4-desktop/server/web)
+blesh-git            # ble.sh — fish/zsh-like autosuggestions for bash
+
+# VS Code is installed via `omarchy install vscode` in install.sh (configures
+# Omarchy theme/defaults). Alternatively use the AUR package below:
+# visual-studio-code-bin
