@@ -76,7 +76,7 @@ fi
 # ---------------------------------------------------------------------------
 info "Applying Tokyo Night theme + IT wallpaper"
 omarchy theme set "Tokyo Night" 2>/dev/null || true
-BG="$HOME/.config/omarchy/backgrounds/Tokyo Night/it-synth-scape.jpg"
+BG="$HOME/.config/omarchy/backgrounds/Tokyo Night/abstract-fakurian.jpg"
 if [[ -f $BG ]]; then
   ln -nsf "$BG" "$HOME/.config/omarchy/current/background"
   pkill -x swaybg 2>/dev/null
