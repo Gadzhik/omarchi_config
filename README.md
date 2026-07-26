@@ -58,7 +58,7 @@ OpenVPN, Docker (+ compose), QEMU/KVM + libvirt + virt-manager (+ edk2-ovmf, swt
 | `mimeapps.list` | **VLC** default video/audio player; **Firefox** default browser |
 | `.bashrc` | **fzf** (Ctrl+R/Ctrl+T/`**`) + **ble.sh** (fish/zsh-like autosuggestions) |
 | `.config/mise/config.toml` | Node.js version pin |
-| `.config/omarchy/backgrounds/Tokyo Night/ Cyberpunk/IT wallpaper (Tokyo Night theme kept)| Cyberpunk/IT wallpaper (Tokyo Night theme kept) |
+| `.config/omarchy/backgrounds/Tokyo Night/abstract-fakurian.jpg` | Clean abstract wallpaper (Milad Fakurian), Tokyo Night theme kept |
 
 ### Custom helper scripts (`home/.local/bin/`)
 
