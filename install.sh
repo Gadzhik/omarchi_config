@@ -81,9 +81,12 @@ fi
 # ---------------------------------------------------------------------------
 # 6. Theme + IT wallpaper (keeps Tokyo Night colors, cyberpunk background)
 # ---------------------------------------------------------------------------
-info "Applying Tokyo Night theme + IT wallpaper"
+info "Applying Tokyo Night theme + cheat-sheet wallpaper"
 omarchy theme set "Tokyo Night" 2>/dev/null || true
-BG="$HOME/.config/omarchy/backgrounds/Tokyo Night/abstract-fakurian.jpg"
+# Omarchy resolves user backgrounds via the theme *slug* in current/theme.name
+# ("tokyo-night"), not the display name — anything under the old "Tokyo Night"
+# folder is invisible to `omarchy theme bg next`.
+BG="$HOME/.config/omarchy/backgrounds/tokyo-night/vim-omarchy-neon.png"
 if [[ -f $BG ]]; then
   ln -nsf "$BG" "$HOME/.config/omarchy/current/background"
   pkill -x swaybg 2>/dev/null

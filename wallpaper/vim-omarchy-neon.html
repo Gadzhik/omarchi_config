@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  :root{
+    --bg:#04060c;
+    --cyan:#22e1ff;
+    --green:#39ff9e;
+    --magenta:#ff2fb9;
+    --amber:#ffc247;
+    --dim:#7d8ba8;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1920px;height:1200px;overflow:hidden}
+  body{
+    background:
+      radial-gradient(950px 650px at 8% -8%, rgba(34,225,255,.20), transparent 60%),
+      radial-gradient(900px 700px at 50% -10%, rgba(57,255,158,.13), transparent 60%),
+      radial-gradient(1000px 750px at 93% 6%, rgba(255,47,185,.19), transparent 62%),
+      radial-gradient(900px 700px at 50% 115%, rgba(165,107,255,.18), transparent 62%),
+      var(--bg);
+    font-family:"JetBrainsMono Nerd Font","JetBrains Mono",monospace;
+    color:#dfe9ff;
+    position:relative;
+  }
+  body::before{
+    content:"";position:absolute;inset:0;
+    background-image:
+      linear-gradient(rgba(120,180,255,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(120,180,255,.05) 1px, transparent 1px);
+    background-size:48px 48px;
+    mask-image:radial-gradient(120% 100% at 50% 40%, #000 30%, transparent 85%);
+  }
+  body::after{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(150% 115% at 50% 50%, transparent 55%, rgba(0,0,0,.7) 100%);
+  }
+
+  .page{position:relative;z-index:2;height:1200px;padding:34px 12px 4px;display:flex;flex-direction:column;gap:4px}
+
+  .grid{flex:1;display:grid;grid-template-columns:.97fr .97fr 1.06fr;gap:10px;min-height:0}
+  .panel{
+    position:relative;border-radius:10px;padding:9px 11px 5px;min-height:0;
+    background:linear-gradient(180deg, rgba(10,16,30,.70), rgba(6,9,18,.58));
+    border:1px solid rgba(255,255,255,.06);
+  }
+  .vim{box-shadow:0 0 0 1px rgba(34,225,255,.20) inset, 0 0 26px rgba(34,225,255,.13)}
+  .lazy{box-shadow:0 0 0 1px rgba(57,255,158,.18) inset, 0 0 26px rgba(57,255,158,.11)}
+  .oma{box-shadow:0 0 0 1px rgba(255,47,185,.20) inset, 0 0 26px rgba(255,47,185,.13)}
+
+  .ptitle{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+  .ptitle b{font-size:19px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;white-space:nowrap}
+  .ptitle small{font-size:10px;letter-spacing:.18em;color:var(--dim);text-transform:uppercase;white-space:nowrap}
+  .ptitle .line{flex:1;height:1px}
+  .vim .ptitle b{color:#eafeff;text-shadow:0 0 8px var(--cyan),0 0 22px rgba(34,225,255,.8)}
+  .vim .ptitle .line{background:linear-gradient(90deg,rgba(34,225,255,.6),transparent)}
+  .lazy .ptitle b{color:#eaffef;text-shadow:0 0 8px var(--green),0 0 22px rgba(57,255,158,.8)}
+  .lazy .ptitle .line{background:linear-gradient(90deg,rgba(57,255,158,.6),transparent)}
+  .oma .ptitle b{color:#ffeaf8;text-shadow:0 0 8px var(--magenta),0 0 22px rgba(255,47,185,.8)}
+  .oma .ptitle .line{background:linear-gradient(90deg,rgba(255,47,185,.6),transparent)}
+
+  .cols{column-count:2;column-gap:14px}
+
+  section{break-inside:avoid;margin-bottom:7px}
+  h3{
+    font-size:13px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:3px;
+    padding-bottom:2px;border-bottom:1px dashed rgba(255,255,255,.10);
+    color:var(--amber);text-shadow:0 0 10px rgba(255,194,71,.5);
+  }
+
+  .row{display:flex;align-items:baseline;gap:6px;line-height:1.5;white-space:nowrap}
+  .k{
+    flex:none;font-size:14px;font-weight:700;color:#eaf6ff;
+    padding:0 5px;border-radius:4px;
+    border:1px solid rgba(34,225,255,.42);
+    background:rgba(34,225,255,.09);
+    box-shadow:0 0 7px rgba(34,225,255,.24), inset 0 0 5px rgba(34,225,255,.12);
+    text-shadow:0 0 8px rgba(34,225,255,.5);
+  }
+  .lazy .k{
+    border-color:rgba(57,255,158,.40);background:rgba(57,255,158,.09);
+    box-shadow:0 0 7px rgba(57,255,158,.22), inset 0 0 5px rgba(57,255,158,.12);
+    text-shadow:0 0 8px rgba(57,255,158,.45);
+  }
+  .oma .k{
+    border-color:rgba(255,47,185,.42);background:rgba(255,47,185,.09);
+    box-shadow:0 0 7px rgba(255,47,185,.22), inset 0 0 5px rgba(255,47,185,.12);
+    text-shadow:0 0 8px rgba(255,47,185,.45);
+  }
+  .d{font-size:14px;color:#aabad6;overflow:hidden;text-overflow:ellipsis}
+
+  footer{flex:none;display:flex;align-items:center;justify-content:center;gap:13px;color:var(--dim);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase}
+  footer b{color:var(--amber);text-shadow:0 0 10px rgba(255,194,71,.7)}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="grid">
+
+    <!-- ============ VIM ============ -->
+    <div class="panel vim">
+      <div class="ptitle"><b>Vim</b><small>modal editing</small><span class="line"></span></div>
+      <div class="cols">
+
+        <section>
+          <h3>Движение</h3>
+          <div class="row"><span class="k">h j k l</span><span class="d">← ↓ ↑ →</span></div>
+          <div class="row"><span class="k">w / b</span><span class="d">слово вперёд / назад</span></div>
+          <div class="row"><span class="k">e / ge</span><span class="d">конец слова</span></div>
+          <div class="row"><span class="k">0 ^ $</span><span class="d">начало / текст / конец</span></div>
+          <div class="row"><span class="k">gg / G</span><span class="d">первая / последняя</span></div>
+          <div class="row"><span class="k">42G</span><span class="d">на строку 42</span></div>
+          <div class="row"><span class="k">{ }</span><span class="d">абзац назад / вперёд</span></div>
+          <div class="row"><span class="k">%</span><span class="d">парная скобка</span></div>
+          <div class="row"><span class="k">f x / t x</span><span class="d">до символа x</span></div>
+          <div class="row"><span class="k">; ,</span><span class="d">повтор f/t</span></div>
+        </section>
+
+        <section>
+          <h3>Скролл и прыжки</h3>
+          <div class="row"><span class="k">^D / ^U</span><span class="d">полэкрана вниз / вверх</span></div>
+          <div class="row"><span class="k">^F / ^B</span><span class="d">страница вниз / вверх</span></div>
+          <div class="row"><span class="k">zz zt zb</span><span class="d">центр / верх / низ</span></div>
+          <div class="row"><span class="k">^O / ^I</span><span class="d">назад / вперёд</span></div>
+          <div class="row"><span class="k">``</span><span class="d">вернуться на место</span></div>
+          <div class="row"><span class="k">H M L</span><span class="d">верх / центр / низ окна</span></div>
+        </section>
+
+        <section>
+          <h3>Режимы</h3>
+          <div class="row"><span class="k">i / a</span><span class="d">вставка до / после</span></div>
+          <div class="row"><span class="k">I / A</span><span class="d">в начало / конец строки</span></div>
+          <div class="row"><span class="k">o / O</span><span class="d">строка ниже / выше</span></div>
+          <div class="row"><span class="k">v / V</span><span class="d">визуальный / строчный</span></div>
+          <div class="row"><span class="k">^V</span><span class="d">блочное выделение</span></div>
+          <div class="row"><span class="k">gv</span><span class="d">вернуть выделение</span></div>
+          <div class="row"><span class="k">R</span><span class="d">режим замены</span></div>
+          <div class="row"><span class="k">Esc / ^[</span><span class="d">нормальный режим</span></div>
+        </section>
+
+        <section>
+          <h3>Правка</h3>
+          <div class="row"><span class="k">x / X</span><span class="d">удалить символ</span></div>
+          <div class="row"><span class="k">dd / dw</span><span class="d">удалить строку / слово</span></div>
+          <div class="row"><span class="k">cc / cw</span><span class="d">заменить строку / слово</span></div>
+          <div class="row"><span class="k">D / C</span><span class="d">до конца строки</span></div>
+          <div class="row"><span class="k">yy / yw</span><span class="d">копировать строку</span></div>
+          <div class="row"><span class="k">p / P</span><span class="d">вставить после / до</span></div>
+          <div class="row"><span class="k">u / ^R</span><span class="d">отмена / возврат</span></div>
+          <div class="row"><span class="k">.</span><span class="d">повторить действие</span></div>
+          <div class="row"><span class="k">J</span><span class="d">склеить строки</span></div>
+          <div class="row"><span class="k">&gt;&gt; / &lt;&lt;</span><span class="d">отступ вправо / влево</span></div>
+          <div class="row"><span class="k">~</span><span class="d">смена регистра</span></div>
+          <div class="row"><span class="k">^A / ^X</span><span class="d">число +1 / −1</span></div>
+        </section>
+
+        <section>
+          <h3>Текстовые объекты</h3>
+          <div class="row"><span class="k">ciw</span><span class="d">заменить слово</span></div>
+          <div class="row"><span class="k">di"</span><span class="d">внутри кавычек</span></div>
+          <div class="row"><span class="k">ca(</span><span class="d">скобки вместе с ними</span></div>
+          <div class="row"><span class="k">yi{</span><span class="d">копировать тело блока</span></div>
+          <div class="row"><span class="k">vip / dap</span><span class="d">абзац</span></div>
+          <div class="row"><span class="k">dit / cit</span><span class="d">внутри HTML-тега</span></div>
+        </section>
+
+        <section>
+          <h3>Поиск и замена</h3>
+          <div class="row"><span class="k">/ ?</span><span class="d">поиск вперёд / назад</span></div>
+          <div class="row"><span class="k">n / N</span><span class="d">следующее / пред.</span></div>
+          <div class="row"><span class="k">* / #</span><span class="d">слово под курсором</span></div>
+          <div class="row"><span class="k">:%s/a/b/g</span><span class="d">замена в файле</span></div>
+          <div class="row"><span class="k">:%s/a/b/gc</span><span class="d">с подтверждением</span></div>
+          <div class="row"><span class="k">:noh</span><span class="d">убрать подсветку</span></div>
+        </section>
+
+        <section>
+          <h3>Файлы и окна</h3>
+          <div class="row"><span class="k">:w / :q / :wq</span><span class="d">записать / выйти</span></div>
+          <div class="row"><span class="k">:q! / ZZ</span><span class="d">без записи / с записью</span></div>
+          <div class="row"><span class="k">:e file</span><span class="d">открыть файл</span></div>
+          <div class="row"><span class="k">:sp / :vs</span><span class="d">гориз. / верт. сплит</span></div>
+          <div class="row"><span class="k">^W h j k l</span><span class="d">фокус между окнами</span></div>
+          <div class="row"><span class="k">^W q / =</span><span class="d">закрыть / выровнять</span></div>
+          <div class="row"><span class="k">^W o</span><span class="d">оставить одно окно</span></div>
+          <div class="row"><span class="k">:bn :bp :bd</span><span class="d">буферы</span></div>
+        </section>
+
+        <section>
+          <h3>Метки и макросы</h3>
+          <div class="row"><span class="k">ma / 'a</span><span class="d">поставить / перейти</span></div>
+          <div class="row"><span class="k">''</span><span class="d">прошлая позиция</span></div>
+          <div class="row"><span class="k">qa … q</span><span class="d">запись макроса в a</span></div>
+          <div class="row"><span class="k">@a / @@</span><span class="d">выполнить / повторить</span></div>
+          <div class="row"><span class="k">10@a</span><span class="d">выполнить 10 раз</span></div>
+        </section>
+
+        <section>
+          <h3>Регистры</h3>
+          <div class="row"><span class="k">"ayy / "ap</span><span class="d">регистр a</span></div>
+          <div class="row"><span class="k">"0p</span><span class="d">последний yank</span></div>
+          <div class="row"><span class="k">"+y / "+p</span><span class="d">системный буфер</span></div>
+          <div class="row"><span class="k">^R a</span><span class="d">регистр в insert</span></div>
+          <div class="row"><span class="k">"_dd</span><span class="d">удалить без копии</span></div>
+        </section>
+
+        <section>
+          <h3>Свёртки</h3>
+          <div class="row"><span class="k">za / zA</span><span class="d">свернуть / развернуть</span></div>
+          <div class="row"><span class="k">zR / zM</span><span class="d">раскрыть / закрыть всё</span></div>
+          <div class="row"><span class="k">zf + движ.</span><span class="d">создать свёртку</span></div>
+          <div class="row"><span class="k">zj / zk</span><span class="d">след. / пред.</span></div>
+        </section>
+
+        <section>
+          <h3>Команды</h3>
+          <div class="row"><span class="k">:!cmd</span><span class="d">команда оболочки</span></div>
+          <div class="row"><span class="k">:%!cmd</span><span class="d">прогнать файл через cmd</span></div>
+          <div class="row"><span class="k">:r file</span><span class="d">вставить файл</span></div>
+          <div class="row"><span class="k">:g/pat/d</span><span class="d">удалить по маске</span></div>
+          <div class="row"><span class="k">:set nu</span><span class="d">номера строк</span></div>
+          <div class="row"><span class="k">:earlier 5m</span><span class="d">откат на 5 минут</span></div>
+          <div class="row"><span class="k">:help x</span><span class="d">справка</span></div>
+        </section>
+
+      </div>
+    </div>
+
+    <!-- ============ LAZYVIM ============ -->
+    <div class="panel lazy">
+      <div class="ptitle"><b>LazyVim</b><small>nvim 0.12 · SPC = leader</small><span class="line"></span></div>
+      <div class="cols">
+
+        <section>
+          <h3>Основа</h3>
+          <div class="row"><span class="k">SPC</span><span class="d">лидер, which-key подскажет</span></div>
+          <div class="row"><span class="k">SPC sk</span><span class="d">поиск по всем хоткеям</span></div>
+          <div class="row"><span class="k">SPC ?</span><span class="d">хоткеи этого буфера</span></div>
+          <div class="row"><span class="k">SPC l</span><span class="d">Lazy — плагины</span></div>
+          <div class="row"><span class="k">SPC cm</span><span class="d">Mason — LSP-серверы</span></div>
+          <div class="row"><span class="k">SPC fc</span><span class="d">конфиг nvim</span></div>
+          <div class="row"><span class="k">^S</span><span class="d">сохранить файл</span></div>
+        </section>
+
+        <section>
+          <h3>Поиск и файлы</h3>
+          <div class="row"><span class="k">SPC SPC</span><span class="d">файлы проекта</span></div>
+          <div class="row"><span class="k">SPC fr</span><span class="d">недавние файлы</span></div>
+          <div class="row"><span class="k">SPC /</span><span class="d">grep по проекту</span></div>
+          <div class="row"><span class="k">SPC sw</span><span class="d">слово под курсором</span></div>
+          <div class="row"><span class="k">SPC ,</span><span class="d">список буферов</span></div>
+          <div class="row"><span class="k">SPC :</span><span class="d">история команд</span></div>
+          <div class="row"><span class="k">SPC sR</span><span class="d">повторить поиск</span></div>
+          <div class="row"><span class="k">SPC sh</span><span class="d">справка nvim</span></div>
+          <div class="row"><span class="k">SPC su</span><span class="d">дерево отмен</span></div>
+          <div class="row"><span class="k">SPC e / E</span><span class="d">neo-tree: проект / cwd</span></div>
+          <div class="row"><span class="k">SPC fn</span><span class="d">новый файл</span></div>
+        </section>
+
+        <section>
+          <h3>Код и LSP</h3>
+          <div class="row"><span class="k">gd</span><span class="d">к определению</span></div>
+          <div class="row"><span class="k">gr</span><span class="d">все ссылки</span></div>
+          <div class="row"><span class="k">gI / gy</span><span class="d">реализация / тип</span></div>
+          <div class="row"><span class="k">K / gK</span><span class="d">докстрока / сигнатура</span></div>
+          <div class="row"><span class="k">SPC ca</span><span class="d">code action</span></div>
+          <div class="row"><span class="k">SPC cr</span><span class="d">переименовать</span></div>
+          <div class="row"><span class="k">SPC cR</span><span class="d">переименовать файл</span></div>
+          <div class="row"><span class="k">SPC cf</span><span class="d">отформатировать</span></div>
+          <div class="row"><span class="k">SPC ss</span><span class="d">символы файла</span></div>
+          <div class="row"><span class="k">SPC cl</span><span class="d">инфо о LSP</span></div>
+          <div class="row"><span class="k">]] / [[</span><span class="d">по упоминаниям слова</span></div>
+        </section>
+
+        <section>
+          <h3>Диагностика</h3>
+          <div class="row"><span class="k">]d / [d</span><span class="d">след. / пред. проблема</span></div>
+          <div class="row"><span class="k">]e / [e</span><span class="d">только ошибки</span></div>
+          <div class="row"><span class="k">]w / [w</span><span class="d">предупреждения</span></div>
+          <div class="row"><span class="k">SPC cd</span><span class="d">диагностика строки</span></div>
+          <div class="row"><span class="k">SPC sd</span><span class="d">список всех проблем</span></div>
+          <div class="row"><span class="k">SPC xx / xX</span><span class="d">Trouble: проект / файл</span></div>
+          <div class="row"><span class="k">SPC xt</span><span class="d">все TODO / FIXME</span></div>
+        </section>
+
+        <section>
+          <h3>Буферы и окна</h3>
+          <div class="row"><span class="k">⇧H / ⇧L</span><span class="d">пред. / след. буфер</span></div>
+          <div class="row"><span class="k">]b / [b</span><span class="d">то же самое</span></div>
+          <div class="row"><span class="k">SPC bd</span><span class="d">закрыть буфер</span></div>
+          <div class="row"><span class="k">SPC bb</span><span class="d">прошлый буфер</span></div>
+          <div class="row"><span class="k">^H ^J ^K ^L</span><span class="d">между окнами</span></div>
+          <div class="row"><span class="k">SPC - / |</span><span class="d">сплит вниз / вправо</span></div>
+          <div class="row"><span class="k">SPC wd</span><span class="d">закрыть окно</span></div>
+          <div class="row"><span class="k">^ стрелки</span><span class="d">размер окна</span></div>
+          <div class="row"><span class="k">SPC ⇥ ⇥</span><span class="d">новая вкладка</span></div>
+          <div class="row"><span class="k">SPC qq</span><span class="d">выйти из всего</span></div>
+        </section>
+
+        <section>
+          <h3>Git</h3>
+          <div class="row"><span class="k">SPC gg</span><span class="d">lazygit</span></div>
+          <div class="row"><span class="k">SPC gb</span><span class="d">кто менял строку</span></div>
+          <div class="row"><span class="k">SPC gf</span><span class="d">история файла</span></div>
+          <div class="row"><span class="k">SPC gl</span><span class="d">лог коммитов</span></div>
+          <div class="row"><span class="k">SPC gs</span><span class="d">git status</span></div>
+          <div class="row"><span class="k">SPC gB</span><span class="d">открыть на GitHub</span></div>
+          <div class="row"><span class="k">]h / [h</span><span class="d">след. / пред. правка</span></div>
+          <div class="row"><span class="k">SPC ghs / ghu</span><span class="d">stage / отмена</span></div>
+          <div class="row"><span class="k">SPC ghp</span><span class="d">показать изменение</span></div>
+        </section>
+
+        <section>
+          <h3>Правка и навигация</h3>
+          <div class="row"><span class="k">s / S</span><span class="d">flash-прыжок по экрану</span></div>
+          <div class="row"><span class="k">A-j / A-k</span><span class="d">двигать строку</span></div>
+          <div class="row"><span class="k">gcc / gc</span><span class="d">комментарий</span></div>
+          <div class="row"><span class="k">gco / gcO</span><span class="d">коммент ниже / выше</span></div>
+          <div class="row"><span class="k">SPC sr</span><span class="d">замена по проекту</span></div>
+          <div class="row"><span class="k">^/</span><span class="d">терминал</span></div>
+          <div class="row"><span class="k">SPC ft</span><span class="d">терминал в корне</span></div>
+        </section>
+
+        <section>
+          <h3>Переключатели SPC + u</h3>
+          <div class="row"><span class="k">SPC uf</span><span class="d">автоформат</span></div>
+          <div class="row"><span class="k">SPC ul / uL</span><span class="d">номера / относительные</span></div>
+          <div class="row"><span class="k">SPC ud</span><span class="d">диагностика</span></div>
+          <div class="row"><span class="k">SPC uw</span><span class="d">перенос строк</span></div>
+          <div class="row"><span class="k">SPC uh</span><span class="d">inlay hints</span></div>
+          <div class="row"><span class="k">SPC us</span><span class="d">проверка орфографии</span></div>
+          <div class="row"><span class="k">SPC uC</span><span class="d">сменить тему</span></div>
+        </section>
+
+        <section>
+          <h3>Сессии</h3>
+          <div class="row"><span class="k">SPC qs</span><span class="d">восстановить сессию</span></div>
+          <div class="row"><span class="k">SPC ql</span><span class="d">последняя сессия</span></div>
+          <div class="row"><span class="k">SPC qd</span><span class="d">не сохранять сессию</span></div>
+        </section>
+
+      </div>
+    </div>
+
+    <!-- ============ OMARCHY ============ -->
+    <div class="panel oma">
+      <div class="ptitle"><b>Omarchy</b><small>hyprland · wayland</small><span class="line"></span></div>
+      <div class="cols">
+
+        <section>
+          <h3>Приложения</h3>
+          <div class="row"><span class="k">SUPER ↵</span><span class="d">терминал</span></div>
+          <div class="row"><span class="k">SUPER ALT ↵</span><span class="d">tmux</span></div>
+          <div class="row"><span class="k">SUPER ⇧ B</span><span class="d">браузер</span></div>
+          <div class="row"><span class="k">SUPER ⇧ ALT B</span><span class="d">браузер приватно</span></div>
+          <div class="row"><span class="k">SUPER ⇧ F</span><span class="d">файловый менеджер</span></div>
+          <div class="row"><span class="k">SUPER ⇧ N</span><span class="d">редактор</span></div>
+          <div class="row"><span class="k">SUPER ⇧ M</span><span class="d">музыка</span></div>
+          <div class="row"><span class="k">SUPER ⇧ O</span><span class="d">Obsidian</span></div>
+          <div class="row"><span class="k">SUPER ⇧ D</span><span class="d">lazydocker</span></div>
+          <div class="row"><span class="k">SUPER ⇧ G</span><span class="d">Signal</span></div>
+          <div class="row"><span class="k">SUPER ⇧ A</span><span class="d">ChatGPT</span></div>
+          <div class="row"><span class="k">SUPER ⇧ C / E</span><span class="d">календарь / почта</span></div>
+          <div class="row"><span class="k">SUPER ⇧ /</span><span class="d">1Password</span></div>
+        </section>
+
+        <section>
+          <h3>Окна</h3>
+          <div class="row"><span class="k">SUPER W</span><span class="d">закрыть окно</span></div>
+          <div class="row"><span class="k">SUPER F</span><span class="d">на весь экран</span></div>
+          <div class="row"><span class="k">SUPER ALT F</span><span class="d">во всю ширину</span></div>
+          <div class="row"><span class="k">SUPER T</span><span class="d">плавающее / тайлинг</span></div>
+          <div class="row"><span class="k">SUPER J</span><span class="d">направление сплита</span></div>
+          <div class="row"><span class="k">SUPER O</span><span class="d">открепить поверх всех</span></div>
+          <div class="row"><span class="k">SUPER L</span><span class="d">раскладка стола</span></div>
+          <div class="row"><span class="k">SUPER ←↓↑→</span><span class="d">фокус на окно</span></div>
+          <div class="row"><span class="k">SUPER ⇧ ←↓↑→</span><span class="d">поменять местами</span></div>
+          <div class="row"><span class="k">SUPER − / =</span><span class="d">ширина окна</span></div>
+          <div class="row"><span class="k">SUPER ⇧ − / =</span><span class="d">высота окна</span></div>
+          <div class="row"><span class="k">SUPER G</span><span class="d">сгруппировать окна</span></div>
+          <div class="row"><span class="k">SUPER ALT ⇥</span><span class="d">окно внутри группы</span></div>
+          <div class="row"><span class="k">SUPER S</span><span class="d">карман (scratchpad)</span></div>
+          <div class="row"><span class="k">SUPER ALT S</span><span class="d">убрать окно в карман</span></div>
+          <div class="row"><span class="k">SUPER D</span><span class="d">показать рабочий стол</span></div>
+          <div class="row"><span class="k">SUPER ALT ⌫</span><span class="d">подсмотреть под окном</span></div>
+        </section>
+
+        <section>
+          <h3>Рабочие столы</h3>
+          <div class="row"><span class="k">SUPER 1 … 0</span><span class="d">перейти на стол</span></div>
+          <div class="row"><span class="k">SUPER ⇧ 1 … 0</span><span class="d">перенести окно</span></div>
+          <div class="row"><span class="k">SUPER ⇥ / ⇧ ⇥</span><span class="d">следующий / пред.</span></div>
+          <div class="row"><span class="k">SUPER ^ ⇥</span><span class="d">предыдущий активный</span></div>
+          <div class="row"><span class="k">ALT ⇥</span><span class="d">окна текущего стола</span></div>
+          <div class="row"><span class="k">SUPER колесо</span><span class="d">листать столы</span></div>
+        </section>
+
+        <section>
+          <h3>Меню и система</h3>
+          <div class="row"><span class="k">SUPER Space</span><span class="d">запуск приложений</span></div>
+          <div class="row"><span class="k">SUPER ALT Space</span><span class="d">меню Omarchy</span></div>
+          <div class="row"><span class="k">SUPER Esc</span><span class="d">системное меню</span></div>
+          <div class="row"><span class="k">SUPER K</span><span class="d">все горячие клавиши</span></div>
+          <div class="row"><span class="k">SUPER ^ L</span><span class="d">заблокировать экран</span></div>
+          <div class="row"><span class="k">SUPER ^ Space</span><span class="d">фон рабочего стола</span></div>
+          <div class="row"><span class="k">SUPER ⇧^ Space</span><span class="d">сменить тему</span></div>
+          <div class="row"><span class="k">SUPER ⇧ Space</span><span class="d">скрыть waybar</span></div>
+          <div class="row"><span class="k">SUPER ⌫</span><span class="d">прозрачность окна</span></div>
+          <div class="row"><span class="k">SUPER ⇧ ⌫</span><span class="d">отступы между окнами</span></div>
+        </section>
+
+        <section>
+          <h3>Захват и утилиты</h3>
+          <div class="row"><span class="k">PrtSc</span><span class="d">скриншот</span></div>
+          <div class="row"><span class="k">ALT PrtSc</span><span class="d">запись экрана</span></div>
+          <div class="row"><span class="k">SUPER PrtSc</span><span class="d">пипетка цвета</span></div>
+          <div class="row"><span class="k">SUPER ^ PrtSc</span><span class="d">текст с экрана (OCR)</span></div>
+          <div class="row"><span class="k">SUPER V</span><span class="d">история буфера</span></div>
+          <div class="row"><span class="k">SUPER C / X</span><span class="d">копировать / вырезать</span></div>
+          <div class="row"><span class="k">SUPER ^ E</span><span class="d">эмодзи и символы</span></div>
+          <div class="row"><span class="k">SUPER ^ X</span><span class="d">диктовка</span></div>
+          <div class="row"><span class="k">SUPER ^ S</span><span class="d">поделиться файлом</span></div>
+          <div class="row"><span class="k">SUPER ^ .</span><span class="d">перекодировать видео</span></div>
+          <div class="row"><span class="k">SUPER ^ R</span><span class="d">поставить напоминание</span></div>
+          <div class="row"><span class="k">SUPER , / ⇧ ,</span><span class="d">скрыть уведомления</span></div>
+        </section>
+
+        <section>
+          <h3>Панели и переключатели</h3>
+          <div class="row"><span class="k">SUPER ^ A</span><span class="d">звук</span></div>
+          <div class="row"><span class="k">SUPER ^ B</span><span class="d">bluetooth</span></div>
+          <div class="row"><span class="k">SUPER ^ W</span><span class="d">wi-fi</span></div>
+          <div class="row"><span class="k">SUPER ^ T</span><span class="d">активность (btop)</span></div>
+          <div class="row"><span class="k">SUPER ^ N</span><span class="d">ночной свет</span></div>
+          <div class="row"><span class="k">SUPER ^ I</span><span class="d">блокировка при простое</span></div>
+          <div class="row"><span class="k">SUPER ^ Z</span><span class="d">приблизить экран</span></div>
+          <div class="row"><span class="k">SUPER ^ ALT T</span><span class="d">показать время</span></div>
+          <div class="row"><span class="k">SUPER ^ ALT B</span><span class="d">заряд батареи</span></div>
+          <div class="row"><span class="k">SUPER ^ ALT W</span><span class="d">погода</span></div>
+          <div class="row"><span class="k">SUPER /</span><span class="d">масштаб монитора</span></div>
+        </section>
+
+        <section>
+          <h3>Медиа и яркость</h3>
+          <div class="row"><span class="k">Vol +/-</span><span class="d">громкость (ALT = 1%)</span></div>
+          <div class="row"><span class="k">SUPER Mute</span><span class="d">сменить аудиовыход</span></div>
+          <div class="row"><span class="k">Bri +/-</span><span class="d">яркость (⇧ — мин/макс)</span></div>
+          <div class="row"><span class="k">Play / Next</span><span class="d">управление плеером</span></div>
+          <div class="row"><span class="k">F9</span><span class="d">диктовка, пока зажата</span></div>
+          <div class="row"><span class="k">^ ALT Del</span><span class="d">закрыть все окна</span></div>
+        </section>
+
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <span>SPC = лидер</span><span>·</span><span>^ = ctrl</span><span>·</span><span>⇧ = shift</span><span>·</span><span>A- = alt</span><span>·</span><span>↵ = enter</span><span>·</span><span>⇥ = tab</span><span>·</span>
+    <span><b>SPC sk</b> — хоткеи nvim</span><span>·</span><span><b>SUPER + K</b> — хоткеи omarchy</span>
+  </footer>
+
+</div>
+</body>
+</html>
