@@ -13,6 +13,7 @@ omarchi_config/
 │   ├── full-explicit.txt   # snapshot: ALL explicitly-installed pkgs (reference)
 │   └── full-aur.txt        # snapshot: ALL foreign/AUR pkgs (reference)
 ├── wallpaper/              # source for the cheat-sheet wallpaper (not deployed)
+├── docs/                   # setup notes for tools that live outside home/
 └── home/                   # files copied verbatim into $HOME
     ├── .bashrc
     ├── .config/…           # hypr, waybar, alacritty, elephant, mise, mimeapps, wallpaper
@@ -85,6 +86,18 @@ OpenVPN, Docker (+ compose), QEMU/KVM + libvirt + virt-manager (+ edk2-ovmf, swt
   `WINDOW_PEEK_RESTORE`. Note the window still swallows mouse clicks while invisible.
 
 ---
+
+## Setup notes (`docs/`)
+
+Things that are configured *inside* an application rather than in a dotfile, so
+`install.sh` cannot restore them:
+
+- **`docs/gns3-setup.md`** — GNS3 on Arch: which AUR packages (the stable `-2`
+  ones, not the `3.1` alpha), why no `ubridge` group exists here, first run, and
+  where to get images that are actually licensed.
+- **`docs/lmstudio-tuning.md`** — LM Studio on the Arc iGPU: measured
+  throughput (GPU ~5.4 tok/s vs CPU ~0.4 on a 9B Q4), the per-model settings
+  worth changing, and the models that hang the i915 driver.
 
 ## Hardware-specific values ⚠️
 
