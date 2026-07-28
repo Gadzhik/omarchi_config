@@ -6,6 +6,7 @@ plus `install.sh` to reproduce it on a **clean Omarchy install**.
 ```
 omarchi_config/
 ├── install.sh              # one-shot deploy script (run as normal user)
+├── vim-omarchy-neon.png    # → the active wallpaper (symlink, for a quick look)
 ├── packages/
 │   ├── repo.txt            # official-repo packages to install
 │   ├── aur.txt             # AUR packages to install
