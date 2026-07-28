@@ -95,6 +95,10 @@ Things that are configured *inside* an application rather than in a dotfile, so
 - **`docs/gns3-setup.md`** — GNS3 on Arch: which AUR packages (the stable `-2`
   ones, not the `3.1` alpha), why no `ubridge` group exists here, first run, and
   where to get images that are actually licensed.
+- **`docs/gns3-images.md`** — where images live under `~/GNS3/images/`, the three
+  ways to add one, and the two traps hit while installing MikroTik CHR: a missing
+  `hda_disk_interface` drops the VM into iPXE with "No bootable device", and CHR
+  prints to VGA rather than the serial console the template asks for.
 - **`docs/lmstudio-tuning.md`** — LM Studio on the Arc iGPU: measured
   throughput (GPU ~5.4 tok/s vs CPU ~0.4 on a 9B Q4), the per-model settings
   worth changing, and the models that hang the i915 driver.
