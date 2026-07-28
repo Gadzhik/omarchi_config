@@ -5,14 +5,19 @@ a neon Vim / LazyVim / Omarchy keybinding reference.
 
 Regenerate after editing `vim-omarchy-neon.html`:
 
+The PNG lives in three places — keep them in sync or they drift apart:
+the repo root (previewed on git frontends), the deploy tree under `home/`
+(what `install.sh` copies), and the live system.
+
 ```bash
 cd wallpaper
 chromium --headless --disable-gpu --hide-scrollbars \
   --window-size=1920,1200 --force-device-scale-factor=1.6 \
-  --screenshot=vim-omarchy-neon.png --virtual-time-budget=3000 \
+  --screenshot=../vim-omarchy-neon.png --virtual-time-budget=3000 \
   "file://$PWD/vim-omarchy-neon.html"
 
-cp vim-omarchy-neon.png "../home/.config/omarchy/backgrounds/tokyo-night/"
+cd ..
+cp vim-omarchy-neon.png home/.config/omarchy/backgrounds/tokyo-night/
 cp vim-omarchy-neon.png "$HOME/.config/omarchy/backgrounds/tokyo-night/"
 omarchy theme bg set "$HOME/.config/omarchy/backgrounds/tokyo-night/vim-omarchy-neon.png"
 ```
