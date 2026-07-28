@@ -71,8 +71,10 @@ OpenVPN, Docker (+ compose), QEMU/KVM + libvirt + virt-manager (+ edk2-ovmf, swt
   on AC: 165 Hz + `balanced` + restore. Reacts to power udev events.
 - **`per-window-layout`** — remembers the keyboard layout **per window** (Hyprland has no native
   per-window layout) via the Hyprland IPC socket.
-- **`toggle-show-desktop`** — "show desktop" toggle (SUPER+D): stashes all windows of the
-  active workspace into a special scratch workspace and restores them (Hyprland has no minimize).
+- **`toggle-show-desktop`** — "show desktop" toggle (SUPER+D): jumps to an empty workspace and
+  back (Hyprland has no minimize). It deliberately does *not* move windows — stashing them in a
+  special workspace and pulling them back re-inserts each one into the dwindle tree next to
+  whatever is focused, which comes back reshuffled.
 - **`clipboard-history`** — optional cliphist+walker picker (only used if `cliphist` is installed).
 - **`window-peek`** — makes the focused window transparent while `SUPER+ALT+BACKSPACE` is held
   (`on` saves the window address, `off` restores it), so you can look at what is underneath.
