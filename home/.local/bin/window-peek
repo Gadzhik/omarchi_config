@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# Hold-to-peek: make the focused window transparent while a key combo is held,
+# then restore it on release. Bound in ~/.config/hypr/bindings.conf.
+#
+#   window-peek on   -> remember the focused window and drop its opacity
+#   window-peek off  -> restore whatever window "on" touched
+
+# 0 = fully invisible. Bump to 0.05-0.15 if you want a faint ghost instead.
+PEEK=${WINDOW_PEEK_OPACITY:-0}
+
+# Hyprland's setprop has no "unset", so restoring means re-applying the values
+# Omarchy's windowrule uses: "opacity <active> <inactive>".
+RESTORE=${WINDOW_PEEK_RESTORE:-"0.985 0.96"}
+
+STATE="${XDG_RUNTIME_DIR:-/tmp}/window-peek.addr"
+
+case "$1" in
+on)
+  # Already peeking (key auto-repeat) - don't overwrite the saved address
+  [[ -s $STATE ]] && exit 0
+
+  ADDR=$(hyprctl activewindow -j | jq -r '.address // empty')
+  [[ -z $ADDR ]] && exit 0
+
+  printf '%s' "$ADDR" >"$STATE"
+  hyprctl dispatch setprop "address:$ADDR" opacity "$PEEK" >/dev/null
+  ;;
+
+off)
+  [[ -s $STATE ]] || exit 0
+  ADDR=$(<"$STATE")
+  rm -f "$STATE"
+  # shellcheck disable=SC2086 # RESTORE is deliberately word-split into args
+  hyprctl dispatch setprop "address:$ADDR" opacity $RESTORE >/dev/null
+  ;;
+
+*)
+  echo "Usage: window-peek {on|off}" >&2
+  exit 1
+  ;;
+esac
