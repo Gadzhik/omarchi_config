@@ -78,6 +78,26 @@ if pacman -Qq postgresql &>/dev/null && [[ ! -d /var/lib/postgres/data ]]; then
   sudo -iu postgres initdb -D /var/lib/postgres/data && sudo systemctl enable --now postgresql
 fi
 
+# libvirt ships with the 'default' network stopped and no storage pool at all.
+# Vagrant fails with "Storage pool not found" until both exist.
+info "Bootstrapping libvirt network and storage pool"
+virsh -c qemu:///system net-autostart default &>/dev/null || true
+virsh -c qemu:///system net-start      default &>/dev/null || true
+if ! virsh -c qemu:///system pool-info default &>/dev/null; then
+  virsh -c qemu:///system pool-define-as default dir --target /var/lib/libvirt/images &>/dev/null || warn "libvirt pool"
+fi
+virsh -c qemu:///system pool-autostart default &>/dev/null || true
+virsh -c qemu:///system pool-start     default &>/dev/null || true
+
+# Vagrant defaults to VirtualBox, whose hypervisor clashes with the loaded KVM
+# modules. The libvirt provider reuses the KVM stack that is already running.
+if command -v vagrant >/dev/null && ! vagrant plugin list 2>/dev/null | grep -q vagrant-libvirt; then
+  info "Installing the vagrant-libvirt plugin"
+  vagrant plugin install vagrant-libvirt ||
+    CONFIGURE_ARGS='with-ldflags=-L/opt/vagrant/embedded/lib' vagrant plugin install vagrant-libvirt ||
+    warn "vagrant-libvirt — install it manually"
+fi
+
 # ---------------------------------------------------------------------------
 # 6. Theme + IT wallpaper (keeps Tokyo Night colors, cyberpunk background)
 # ---------------------------------------------------------------------------

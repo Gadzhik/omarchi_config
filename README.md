@@ -62,6 +62,8 @@ OpenVPN, Docker (+ compose), QEMU/KVM + libvirt + virt-manager (+ edk2-ovmf, swt
 | `.zshrc` | **zsh** as login shell + zsh-autosuggestions + syntax-highlighting + starship/mise/fzf/zoxide + Omarchy aliases |
 | `alacritty/alacritty.toml` | Also forces `zsh` as the terminal shell (`[terminal.shell]`) |
 | `.config/mise/config.toml` | Node.js version pin |
+| `.minikube/config/config.json` | minikube defaults: **docker** driver, 4 CPU, 8 GB |
+| `.minikube/files/etc/resolv.conf` | DNS for the cluster node — see the note below |
 | `.config/omarchy/backgrounds/tokyo-night/vim-omarchy-neon.png` | Active wallpaper: neon Vim / LazyVim / Omarchy cheat sheet (3072×1920, source in `wallpaper/`) |
 | `.config/omarchy/backgrounds/Tokyo Night/abstract-fakurian.jpg` | Spare abstract wallpaper (Milad Fakurian). ⚠️ Omarchy only scans the theme **slug** folder (`tokyo-night`), so this one is not in the `SUPER+CTRL+SPACE` rotation |
 
@@ -97,6 +99,19 @@ Adjust if deploying on different hardware:
 
 ## Notes
 
+- **minikube DNS.** The host resolves through a systemd-resolved stub on
+  `127.0.0.53`, which a container cannot use, so minikube substitutes its bridge
+  gateway `192.168.49.1` — and the node gets `SERVFAIL` from it, which breaks
+  every image pull. Adding a `DNSStubListenerExtra` for that address does *not*
+  help: the node runs kube-proxy and CNI in its own netns and cannot reach the
+  host stubs at all (a plain container on the same bridge can). The fix is
+  `.minikube/files/etc/resolv.conf`, which minikube copies into the node on every
+  start. Keep it to bare `nameserver` lines — an `options ndots:0` in there is
+  inherited by pods and stops short names like `kubernetes.default` from
+  resolving through the cluster search domains.
+- **libvirt / Vagrant.** `install.sh` starts the `default` network and creates
+  the `default` storage pool. Without the pool `vagrant up` dies with
+  "Storage pool not found"; libvirt ships without one.
 - Night light is disabled at runtime, not in a config file. If it appears: `omarchy toggle nightlight`.
 - `packages/full-*.txt` are complete snapshots for reference/auditing; `install.sh` uses the
   curated `repo.txt` / `aur.txt`.

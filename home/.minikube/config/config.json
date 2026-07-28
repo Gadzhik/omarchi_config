@@ -1,0 +1,5 @@
+{
+    "cpus": "4",
+    "driver": "docker",
+    "memory": "8g"
+}

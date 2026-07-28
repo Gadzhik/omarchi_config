@@ -7,6 +7,7 @@ slack-desktop        # Slack
 android-studio       # Android Studio
 pgadmin4             # pgAdmin 4 (pulls pgadmin4-desktop/server/web)
 blesh-git            # ble.sh — fish/zsh-like autosuggestions for bash
+vagrant              # Vagrant (see install.sh: needs the vagrant-libvirt plugin)
 
 # VS Code is installed via `omarchy install vscode` in install.sh (configures
 # Omarchy theme/defaults). Alternatively use the AUR package below:
