@@ -28,5 +28,77 @@ bindings = [
 # Send Shift+Return as CSI-u so TUIs can distinguish it from Return without treating it as Alt+Return.
 { key = "Return", mods = "Shift", chars = "\u001B[13;2u" },
 # Legacy encoding sends Alt+Shift+Return the same as Alt+Return; send CSI-u so tmux can match M-S-Enter.
-{ key = "Return", mods = "Alt|Shift", chars = "\u001B[13;4u" }
+{ key = "Return", mods = "Alt|Shift", chars = "\u001B[13;4u" },
+
+# --------------------------------------------------------------------------
+# Раскладко-независимые сочетания (kb_layout = us,ru).
+#
+# Alacritty сопоставляет биндинги с символом активной раскладки. В русской
+# Ctrl+A -> Ctrl+ф, а из не-ASCII символа управляющий код не выводится, и в
+# шелл не уходит ничего. Ниже явные биндинги для кириллицы по позиции ЙЦУКЕН.
+#
+# Ctrl+<буква> -> управляющий код ^A..^Z
+# --------------------------------------------------------------------------
+{ key = "ф", mods = "Control", chars = "\u0001" },  # Ctrl+A  начало строки
+{ key = "и", mods = "Control", chars = "\u0002" },  # Ctrl+B  назад
+{ key = "с", mods = "Control", chars = "\u0003" },  # Ctrl+C  прервать
+{ key = "в", mods = "Control", chars = "\u0004" },  # Ctrl+D  EOF
+{ key = "у", mods = "Control", chars = "\u0005" },  # Ctrl+E  конец строки
+{ key = "а", mods = "Control", chars = "\u0006" },  # Ctrl+F  вперёд
+{ key = "п", mods = "Control", chars = "\u0007" },  # Ctrl+G
+{ key = "р", mods = "Control", chars = "\u0008" },  # Ctrl+H  backspace
+{ key = "ш", mods = "Control", chars = "\u0009" },  # Ctrl+I  tab
+{ key = "о", mods = "Control", chars = "\u000A" },  # Ctrl+J
+{ key = "л", mods = "Control", chars = "\u000B" },  # Ctrl+K  убить до конца
+{ key = "д", mods = "Control", chars = "\u000C" },  # Ctrl+L  очистить экран
+{ key = "ь", mods = "Control", chars = "\u000D" },  # Ctrl+M  return
+{ key = "т", mods = "Control", chars = "\u000E" },  # Ctrl+N  следующая команда
+{ key = "щ", mods = "Control", chars = "\u000F" },  # Ctrl+O
+{ key = "з", mods = "Control", chars = "\u0010" },  # Ctrl+P  предыдущая команда
+{ key = "й", mods = "Control", chars = "\u0011" },  # Ctrl+Q
+{ key = "к", mods = "Control", chars = "\u0012" },  # Ctrl+R  поиск по истории
+{ key = "ы", mods = "Control", chars = "\u0013" },  # Ctrl+S
+{ key = "е", mods = "Control", chars = "\u0014" },  # Ctrl+T
+{ key = "г", mods = "Control", chars = "\u0015" },  # Ctrl+U  убить строку
+{ key = "м", mods = "Control", chars = "\u0016" },  # Ctrl+V
+{ key = "ц", mods = "Control", chars = "\u0017" },  # Ctrl+W  убить слово
+{ key = "ч", mods = "Control", chars = "\u0018" },  # Ctrl+X
+{ key = "н", mods = "Control", chars = "\u0019" },  # Ctrl+Y  вставить убитое
+{ key = "я", mods = "Control", chars = "\u001A" },  # Ctrl+Z  в фон
+{ key = "х", mods = "Control", chars = "\u001B" },  # Ctrl+[  Escape (важно для vim)
+{ key = "ъ", mods = "Control", chars = "\u001D" },  # Ctrl+]
+
+# Alt+<буква> -> ESC + латинская буква (readline: перемещение по словам)
+{ key = "ф", mods = "Alt", chars = "\u001Ba" },
+{ key = "и", mods = "Alt", chars = "\u001Bb" },  # Alt+B  слово назад
+{ key = "с", mods = "Alt", chars = "\u001Bc" },
+{ key = "в", mods = "Alt", chars = "\u001Bd" },  # Alt+D  убить слово вперёд
+{ key = "у", mods = "Alt", chars = "\u001Be" },
+{ key = "а", mods = "Alt", chars = "\u001Bf" },  # Alt+F  слово вперёд
+{ key = "п", mods = "Alt", chars = "\u001Bg" },
+{ key = "р", mods = "Alt", chars = "\u001Bh" },
+{ key = "ш", mods = "Alt", chars = "\u001Bi" },
+{ key = "о", mods = "Alt", chars = "\u001Bj" },
+{ key = "л", mods = "Alt", chars = "\u001Bk" },
+{ key = "д", mods = "Alt", chars = "\u001Bl" },
+{ key = "ь", mods = "Alt", chars = "\u001Bm" },
+{ key = "т", mods = "Alt", chars = "\u001Bn" },
+{ key = "щ", mods = "Alt", chars = "\u001Bo" },
+{ key = "з", mods = "Alt", chars = "\u001Bp" },
+{ key = "й", mods = "Alt", chars = "\u001Bq" },
+{ key = "к", mods = "Alt", chars = "\u001Br" },
+{ key = "ы", mods = "Alt", chars = "\u001Bs" },
+{ key = "е", mods = "Alt", chars = "\u001Bt" },
+{ key = "г", mods = "Alt", chars = "\u001Bu" },
+{ key = "м", mods = "Alt", chars = "\u001Bv" },
+{ key = "ц", mods = "Alt", chars = "\u001Bw" },
+{ key = "ч", mods = "Alt", chars = "\u001Bx" },
+{ key = "н", mods = "Alt", chars = "\u001By" },
+{ key = "я", mods = "Alt", chars = "\u001Bz" },
+
+# Собственные сочетания Alacritty
+{ key = "с", mods = "Control|Shift", action = "Copy" },            # Ctrl+Shift+C
+{ key = "м", mods = "Control|Shift", action = "Paste" },           # Ctrl+Shift+V
+{ key = "а", mods = "Control|Shift", action = "SearchForward" },   # Ctrl+Shift+F
+{ key = "и", mods = "Control|Shift", action = "SearchBackward" }   # Ctrl+Shift+B
 ]
