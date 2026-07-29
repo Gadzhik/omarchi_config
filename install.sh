@@ -13,6 +13,20 @@ warn() { printf '\033[1;33m  ! %s\033[0m\n' "$*"; }
 pkgs() { grep -vE '^\s*#|^\s*$' "$1" | sed 's/#.*//' | awk '{print $1}'; }
 
 command -v pacman >/dev/null || { echo "This must run on Arch/Omarchy."; exit 1; }
+[[ $EUID -eq 0 ]] && { echo "Run as your normal user, not root — it calls sudo itself."; exit 1; }
+
+# Take the sudo password once up front and keep the ticket alive, so a long run
+# never stalls waiting for a prompt halfway through.
+info "Asking for sudo once (kept alive for the whole run)"
+sudo -v || { echo "sudo is required."; exit 1; }
+while true; do sudo -n true; sleep 60; kill -0 "$$" 2>/dev/null || exit; done 2>/dev/null &
+SUDO_KEEPALIVE=$!
+trap 'kill $SUDO_KEEPALIVE 2>/dev/null' EXIT
+
+# This laptop. The thermal section is tuned to its cooling and is skipped on
+# anything else — see "Hardware-specific values" in README.md.
+THIS_MODEL="Redmi Book Pro 16 2024"
+MODEL="$(cat /sys/class/dmi/id/product_name 2>/dev/null || echo unknown)"
 
 # ---------------------------------------------------------------------------
 # 1. Packages
@@ -59,7 +73,18 @@ fi
 #     See docs/thermal-fan-fix.md for the full story.
 # ---------------------------------------------------------------------------
 info "Installing thermal fix (fan blacklist + PL1 by AC state)"
-if [[ -d $DIR/system ]]; then
+if [[ ${SKIP_THERMAL:-0} == 1 ]]; then
+  warn "SKIP_THERMAL=1 — thermal fix skipped on request"
+elif [[ $MODEL != "$THIS_MODEL" ]]; then
+  # Refusing here is deliberate. The blacklist and the 45 W PL1 are tuned to this
+  # laptop's cooling; applying them blind to other hardware can cook it. Without
+  # working fans THIS machine reaches 100 C in 30 s at 35 W.
+  warn "Hardware is '$MODEL', not '$THIS_MODEL' — thermal fix NOT installed."
+  warn "It is model-specific; see docs/thermal-fan-fix.md before forcing it."
+  warn "To install anyway: FORCE_THERMAL=1 ./install.sh"
+  [[ ${FORCE_THERMAL:-0} == 1 ]] && MODEL="$THIS_MODEL"
+fi
+if [[ -d $DIR/system && $MODEL == "$THIS_MODEL" && ${SKIP_THERMAL:-0} != 1 ]]; then
   # bitland_mifs_wmi breaks fan control on this laptop: without the blacklist the
   # fans never spin, not even at 100 C. Costs the keyboard backlight.
   sudo install -Dm644 "$DIR/system/etc/modprobe.d/bitland-mifs-fan-fix.conf" \
@@ -83,7 +108,7 @@ if [[ -d $DIR/system ]]; then
     warn "bitland_mifs_wmi is still loaded — REBOOT for the fan fix to take effect."
     warn "Until then set-power-limit.sh keeps PL1 at 28 W on purpose (no airflow)."
   fi
-else
+elif [[ ! -d $DIR/system ]]; then
   warn "system/ missing — thermal fix not installed"
 fi
 
@@ -154,6 +179,16 @@ hyprctl reload 2>/dev/null || true
 omarchy restart waybar 2>/dev/null || true
 systemctl --user restart elephant.service 2>/dev/null || true
 
+# ---------------------------------------------------------------------------
+# 8. Verify what actually landed
+# ---------------------------------------------------------------------------
+info "Verifying the deployment"
+if [[ -x $DIR/verify.sh ]]; then
+  "$DIR/verify.sh" || warn "verify.sh reported problems — see the ✗ lines above"
+else
+  warn "verify.sh missing — cannot self-check"
+fi
+
 cat <<'EOF'
 
 ============================================================
@@ -168,5 +203,7 @@ cat <<'EOF'
   • Turn OFF the night light if it comes on:  omarchy toggle nightlight
   • Hardware-specific values in the copied files assume the same
     laptop (see README.md → "Hardware-specific values").
+
+ Re-check at any time (read-only, no sudo):   ./verify.sh
 ============================================================
 EOF

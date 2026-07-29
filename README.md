@@ -6,6 +6,7 @@ plus `install.sh` to reproduce it on a **clean Omarchy install**.
 ```
 omarchi_config/
 ├── install.sh              # one-shot deploy script (run as normal user)
+├── verify.sh               # read-only self-check, no sudo — run it anytime
 ├── vim-omarchy-neon.png    # → the active wallpaper (symlink, for a quick look)
 ├── packages/
 │   ├── repo.txt            # official-repo packages to install
@@ -30,16 +31,44 @@ omarchi_config/
 
 ```bash
 cd ~/Documents/omarchi_config
-./install.sh
+./install.sh          # asks for sudo once, then runs unattended
+sudo reboot           # required — see below
+./verify.sh           # confirms everything landed
 ```
 
-Then **reboot** — the fan fix blacklists a kernel module that loads early at boot,
-so logging out is not enough. (Logging out still suffices for the
-`docker`/`libvirt`/`kvm` groups and ble.sh if you skip the thermal part.)
-The script is idempotent — safe to re-run.
+`install.sh` is idempotent — safe to re-run. It takes the sudo password once at the
+start and keeps the ticket alive, so it never stalls waiting for a prompt halfway
+through. It ends by running `verify.sh` itself.
 
-⚠️ `install.sh` now also writes files **outside `$HOME`** (`/etc`, `/usr/local/bin`)
-for the thermal fix — see `system/` and `docs/thermal-fan-fix.md`.
+**Reboot is required, not just a logout** — the fan fix blacklists a kernel module
+that loads early at boot. Until you reboot, PL1 deliberately stays at 28 W because
+there is no airflow yet.
+
+⚠️ `install.sh` also writes **outside `$HOME`** (`/etc`, `/usr/local/bin`) for the
+thermal fix — see `system/` and `docs/thermal-fan-fix.md`.
+
+### Deploying on different hardware
+
+The thermal part is **model-specific** and refuses to install on anything whose DMI
+product name is not `Redmi Book Pro 16 2024`. Everything else still deploys normally.
+
+| variable | effect |
+|----------|--------|
+| *(none)* | thermal fix installs only on the matching laptop |
+| `FORCE_THERMAL=1` | install it anyway — **read `docs/thermal-fan-fix.md` first** |
+| `SKIP_THERMAL=1` | never install it, even on the matching laptop |
+
+This guard exists because the blacklist and the 45 W PL1 assume *this* cooling
+system. Without working fans this machine hits 100 °C in 30 s at 35 W.
+
+### verify.sh
+
+Read-only, needs no sudo, exits non-zero if anything is off. Checks the deployed
+`home/` files against the repo, both layers of the ru-layout fix (Hyprland
+`resolve_binds_by_sym` and the Alacritty Cyrillic bindings, including that the TOML
+still parses), every thermal file and service, whether `bitland_mifs_wmi` is loaded,
+and whether PL1 matches the current power source. On other hardware the thermal
+block reports as not-applicable instead of failing.
 
 ---
 
