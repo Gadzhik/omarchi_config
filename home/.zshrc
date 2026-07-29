@@ -34,3 +34,8 @@ unset _zp
 # Up/Down search history by the prefix already typed
 bindkey '^[[A' history-substring-search-up 2>/dev/null
 bindkey '^[[B' history-substring-search-down 2>/dev/null
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/home/igadzhi/.lmstudio/bin"
+# End of LM Studio CLI section
+

@@ -22,3 +22,8 @@ eval "$(fzf --bash)"
 
 # Activate ble.sh (must be the last line): enables the live autosuggestions.
 [[ ${BLE_VERSION-} ]] && ble-attach
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/home/igadzhi/.lmstudio/bin"
+# End of LM Studio CLI section
+
