@@ -14,6 +14,12 @@ omarchi_config/
 │   └── full-aur.txt        # snapshot: ALL foreign/AUR pkgs (reference)
 ├── wallpaper/              # source for the cheat-sheet wallpaper (not deployed)
 ├── docs/                   # setup notes for tools that live outside home/
+├── scripts/                # generators/helpers used to produce config (not deployed)
+├── system/                 # files installed OUTSIDE $HOME (needs sudo)
+│   ├── etc/modprobe.d/…    # fan fix: blacklist bitland_mifs_wmi
+│   ├── etc/systemd/system/ # power-limit services
+│   ├── etc/udev/rules.d/…  # reapply PL1 on AC plug/unplug
+│   └── usr/local/bin/…     # set-power-limit.sh
 └── home/                   # files copied verbatim into $HOME
     ├── .bashrc
     ├── .config/…           # hypr, waybar, alacritty, elephant, mise, mimeapps, wallpaper
@@ -27,8 +33,13 @@ cd ~/Documents/omarchi_config
 ./install.sh
 ```
 
-Then **log out and back in** (for `docker`/`libvirt`/`kvm` groups and ble.sh).
+Then **reboot** — the fan fix blacklists a kernel module that loads early at boot,
+so logging out is not enough. (Logging out still suffices for the
+`docker`/`libvirt`/`kvm` groups and ble.sh if you skip the thermal part.)
 The script is idempotent — safe to re-run.
+
+⚠️ `install.sh` now also writes files **outside `$HOME`** (`/etc`, `/usr/local/bin`)
+for the thermal fix — see `system/` and `docs/thermal-fan-fix.md`.
 
 ---
 
@@ -49,12 +60,12 @@ OpenVPN, Docker (+ compose), QEMU/KVM + libvirt + virt-manager (+ edk2-ovmf, swt
 |------|--------|
 | `hypr/looknfeel.conf` | Window gaps → **1px**, keep 2px active border; **VRR = 2** (adaptive sync in fullscreen); `fadeSwitch` animation **off** so opacity changes are instant |
 | `hypr/monitors.conf` | Display scale **1.6** (`GDK_SCALE=1.75`) — panel allows only clean 1.6/2.0 |
-| `hypr/input.conf` | Layout `us,ru`; switch key **Alt+Shift** (`grp:alt_shift_toggle`, was Ctrl+Shift); touchpad `sensitivity = 0.55` via a `device` block, so an external mouse keeps system speed |
+| `hypr/input.conf` | Layout `us,ru`; switch key **Alt+Shift** (`grp:alt_shift_toggle`, was Ctrl+Shift); `resolve_binds_by_sym = false` so `SUPER+<letter>` resolves by key **position** and keeps working in the ru layout (the Latin layout must stay first); touchpad `sensitivity = 0.55` via a `device` block, so an external mouse keeps system speed |
 | `hypr/hypridle.conf` | Screensaver **off**; screen off after **3 min on battery**; lock after **5 min on battery** only |
 | `hypr/bindings.conf` | **SUPER+V** → clipboard history (walker), overriding default "Universal paste"; **SUPER+ALT+BACKSPACE** → peek through the focused window while held |
 | `hypr/autostart.conf` | Launches `refresh-rate-by-power` and `per-window-layout` |
 | `hypr/hyprlock.conf` | Lock screen shows **clock, date, battery %/status** |
-| `alacritty/alacritty.toml` | Font size **12** |
+| `alacritty/alacritty.toml` | Font size **12**; **62 Cyrillic key bindings** so `Ctrl+<letter>` / `Alt+<letter>` keep working in the ru layout — Alacritty matches bindings by the *character* the layout produces, and `Ctrl+ф` yields no control code at all (see `docs/keyboard-layout-shortcuts.md`) |
 | `waybar/config.jsonc` | Added **keyboard-layout indicator**; CPU shows usage%+freq; battery always shows % |
 | `waybar/style.css` | Bar font **13px**; spacing so the layout icon doesn't touch bluetooth |
 | `elephant/clipboard.toml` | Clipboard history **max_items = 233** (walker/SUPER+V; images supported) |
@@ -102,6 +113,13 @@ Things that are configured *inside* an application rather than in a dotfile, so
 - **`docs/lmstudio-tuning.md`** — LM Studio on the Arc iGPU: measured
   throughput (GPU ~5.4 tok/s vs CPU ~0.4 on a 9B Q4), the per-model settings
   worth changing, and the models that hang the i915 driver.
+- **`docs/thermal-fan-fix.md`** — ⚠️ **read before touching anything thermal.**
+  Why the fans never spun (the `bitland_mifs_wmi` driver, new in kernel 7.1),
+  the blacklist that fixes it, the resulting +25 % sustained clock, the PL1
+  safety interlock, and the dead ends not worth re-investigating.
+- **`docs/keyboard-layout-shortcuts.md`** — the two independent layers that make
+  shortcuts survive the ru layout: `resolve_binds_by_sym` for Hyprland and 62
+  explicit Cyrillic bindings for Alacritty.
 
 ## Hardware-specific values ⚠️
 
@@ -112,7 +130,15 @@ Adjust if deploying on different hardware:
 - **Keyboard** `at-translated-set-2-keyboard` — `per-window-layout`, waybar `hyprland/language` on-click.
 - **Touchpad** `gxtp7300:00-27c6:0f90-touchpad` — `input.conf` `device` block. Get yours from
   `hyprctl devices`; a wrong name is silently ignored (no config error, no effect).
-- **Power supplies** `ADP1` (AC) / `BAT0` (battery) — `refresh-rate-by-power`, `hypridle.conf`.
+- **Power supplies** `ADP1` (AC) / `BAT0` (battery) — `refresh-rate-by-power`, `hypridle.conf`,
+  `set-power-limit.sh`.
+- **Thermal / fans** — the whole `system/` tree is specific to **Redmi Book Pro 16 2024**
+  (BIOS `RMAMT6B0P0B0B`). The `bitland_mifs_wmi` blacklist and the 45 W PL1 assume *this*
+  cooling system. **Do not deploy on other hardware** without re-testing: without working
+  fans this machine hits 100 °C in 30 s at 35 W. See `docs/thermal-fan-fix.md`.
+- **Keyboard layout** — the Alacritty Cyrillic bindings assume the standard **ЙЦУКЕН**
+  ru layout; a different `kb_variant` breaks the mapping. Regenerate with
+  `scripts/gen-cyrillic-bindings.py`.
 
 ## Notes
 
