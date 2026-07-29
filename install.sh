@@ -55,6 +55,39 @@ fi
 [[ -f $HOME/.bash_history && ! -s $HOME/.zsh_history ]] && cp "$HOME/.bash_history" "$HOME/.zsh_history"
 
 # ---------------------------------------------------------------------------
+# 3b. System files outside $HOME  (fan fix + power limit)
+#     See docs/thermal-fan-fix.md for the full story.
+# ---------------------------------------------------------------------------
+info "Installing thermal fix (fan blacklist + PL1 by AC state)"
+if [[ -d $DIR/system ]]; then
+  # bitland_mifs_wmi breaks fan control on this laptop: without the blacklist the
+  # fans never spin, not even at 100 C. Costs the keyboard backlight.
+  sudo install -Dm644 "$DIR/system/etc/modprobe.d/bitland-mifs-fan-fix.conf" \
+                      /etc/modprobe.d/bitland-mifs-fan-fix.conf
+  sudo install -Dm755 "$DIR/system/usr/local/bin/set-power-limit.sh" \
+                      /usr/local/bin/set-power-limit.sh
+  sudo install -Dm644 "$DIR/system/etc/systemd/system/power-limit.service" \
+                      /etc/systemd/system/power-limit.service
+  sudo install -Dm644 "$DIR/system/etc/systemd/system/power-limit-resume.service" \
+                      /etc/systemd/system/power-limit-resume.service
+  sudo install -Dm644 "$DIR/system/etc/udev/rules.d/99-power-limit.rules" \
+                      /etc/udev/rules.d/99-power-limit.rules
+
+  sudo mkinitcpio -P 2>/dev/null || warn "mkinitcpio failed — rerun before rebooting"
+  sudo systemctl daemon-reload
+  sudo systemctl enable --now power-limit.service power-limit-resume.service 2>/dev/null ||
+    warn "power-limit services"
+  sudo udevadm control --reload 2>/dev/null || true
+
+  if lsmod | grep -q '^bitland_mifs_wmi'; then
+    warn "bitland_mifs_wmi is still loaded — REBOOT for the fan fix to take effect."
+    warn "Until then set-power-limit.sh keeps PL1 at 28 W on purpose (no airflow)."
+  fi
+else
+  warn "system/ missing — thermal fix not installed"
+fi
+
+# ---------------------------------------------------------------------------
 # 4. Default applications
 # ---------------------------------------------------------------------------
 info "Setting default apps (Firefox browser; VLC player via mimeapps.list)"
@@ -125,6 +158,11 @@ cat <<'EOF'
 
 ============================================================
  Done.  Remaining manual steps:
+  • REBOOT — required for the fan fix (blacklist bitland_mifs_wmi).
+    Logging out is not enough; the module loads early at boot.
+    Until you reboot, PL1 deliberately stays at 28 W (no airflow).
+    Verify after reboot:  lsmod | grep -c '^bitland_mifs_wmi'   → 0
+    See docs/thermal-fan-fix.md
   • Log out and back in  → docker/libvirt/kvm group membership,
     and ble.sh (open a fresh terminal) take effect.
   • Turn OFF the night light if it comes on:  omarchy toggle nightlight

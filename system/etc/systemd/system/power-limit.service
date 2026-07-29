@@ -1,0 +1,12 @@
+[Unit]
+Description=CPU package power limit by AC state (Redmi Book Pro 16 2024)
+Documentation=man:powercap(7)
+After=multi-user.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=no
+ExecStart=/usr/local/bin/set-power-limit.sh
+
+[Install]
+WantedBy=multi-user.target

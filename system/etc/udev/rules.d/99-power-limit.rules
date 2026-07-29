@@ -1,0 +1,2 @@
+# Переприменять лимит при подключении/отключении зарядки
+SUBSYSTEM=="power_supply", KERNEL=="ADP1", RUN+="/usr/bin/systemctl --no-block restart power-limit.service"
