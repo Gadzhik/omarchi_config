@@ -112,6 +112,13 @@ elif [[ ! -d $DIR/system ]]; then
   warn "system/ missing — thermal fix not installed"
 fi
 
+# Lid handling is not model-specific, so it installs regardless of the thermal gate.
+if [[ -f $DIR/system/etc/systemd/logind.conf.d/10-lid-external-power.conf ]]; then
+  sudo install -Dm644 "$DIR/system/etc/systemd/logind.conf.d/10-lid-external-power.conf" \
+                      /etc/systemd/logind.conf.d/10-lid-external-power.conf
+  sudo systemctl reload systemd-logind 2>/dev/null || warn "reload systemd-logind"
+fi
+
 # ---------------------------------------------------------------------------
 # 4. Default applications
 # ---------------------------------------------------------------------------

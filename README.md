@@ -19,6 +19,7 @@ omarchi_config/
 ├── system/                 # files installed OUTSIDE $HOME (needs sudo)
 │   ├── etc/modprobe.d/…    # fan fix: blacklist bitland_mifs_wmi
 │   ├── etc/systemd/system/ # power-limit services
+│   ├── etc/systemd/logind.conf.d/ # lid closed on AC does not suspend
 │   ├── etc/udev/rules.d/…  # reapply PL1 on AC plug/unplug
 │   └── usr/local/bin/…     # set-power-limit.sh
 └── home/                   # files copied verbatim into $HOME
@@ -90,7 +91,7 @@ OpenVPN, Docker (+ compose), QEMU/KVM + libvirt + virt-manager (+ edk2-ovmf, swt
 | `hypr/looknfeel.conf` | Window gaps → **1px**, keep 2px active border; **VRR = 2** (adaptive sync in fullscreen); `fadeSwitch` animation **off** so opacity changes are instant |
 | `hypr/monitors.conf` | Display scale **1.6** (`GDK_SCALE=1.75`) — panel allows only clean 1.6/2.0 |
 | `hypr/input.conf` | Layout `us,ru`; switch key **Alt+Shift** (`grp:alt_shift_toggle`, was Ctrl+Shift); `resolve_binds_by_sym = false` so `SUPER+<letter>` resolves by key **position** and keeps working in the ru layout (the Latin layout must stay first); touchpad `sensitivity = 0.55` via a `device` block, so an external mouse keeps system speed |
-| `hypr/hypridle.conf` | Screensaver **off**; screen off after **3 min on battery**; lock after **5 min on battery** only |
+| `hypr/hypridle.conf` | Screensaver **off**; screen off after **3 min on battery**; lock after **5 min on battery**; suspend after **15 min on battery**. All three are battery-only — on AC the machine never idles out |
 | `hypr/bindings.conf` | **SUPER+V** → clipboard history (walker), overriding default "Universal paste"; **SUPER+ALT+BACKSPACE** → peek through the focused window while held |
 | `hypr/autostart.conf` | Launches `refresh-rate-by-power` and `per-window-layout` |
 | `hypr/hyprlock.conf` | Lock screen shows **clock, date, battery %/status** |
@@ -161,8 +162,9 @@ Adjust if deploying on different hardware:
   `hyprctl devices`; a wrong name is silently ignored (no config error, no effect).
 - **Power supplies** `ADP1` (AC) / `BAT0` (battery) — `refresh-rate-by-power`, `hypridle.conf`,
   `set-power-limit.sh`.
-- **Thermal / fans** — the whole `system/` tree is specific to **Redmi Book Pro 16 2024**
-  (BIOS `RMAMT6B0P0B0B`). The `bitland_mifs_wmi` blacklist and the 45 W PL1 assume *this*
+- **Thermal / fans** — `system/` is model-specific to **Redmi Book Pro 16 2024**
+  (BIOS `RMAMT6B0P0B0B`) *except* `etc/systemd/logind.conf.d/`, which is generic and
+  installs unconditionally. The `bitland_mifs_wmi` blacklist and the 45 W PL1 assume *this*
   cooling system. **Do not deploy on other hardware** without re-testing: without working
   fans this machine hits 100 °C in 30 s at 35 W. See `docs/thermal-fan-fix.md`.
 - **Keyboard layout** — the Alacritty Cyrillic bindings assume the standard **ЙЦУКЕН**
