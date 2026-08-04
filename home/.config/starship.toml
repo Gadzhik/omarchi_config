@@ -3,28 +3,56 @@
 # все покрашены в cyan, и на яркой палитре строка сливается в одно пятно.
 #
 # Роли цветов:
-#   purple  — имя репозитория (единственное, что нужно найти глазами сразу)
-#   white   — путь внутри репозитория, подчинённая информация
-#   red        — ветка (#ff4f9a), и больше ничего
-#   bright-red — всё плохое: ✗, конфликты, удалённые файлы, отставание от
-#                origin, read-only каталог (#ff7ab8)
-#   yellow     — незакоммиченные изменения, это предупреждение
-#   green      — чисто / застейджено / команда прошла
+#   purple      — имя репозитория (единственное, что нужно найти глазами сразу)
+#   white       — путь внутри репозитория, подчинённая информация
+#   red         — ветка (#ff4f9a), и больше ничего
+#   bright-red  — всё плохое: ✗, код возврата, конфликты, удалённые файлы,
+#                 отставание от origin, read-only каталог (#ff7ab8)
+#   yellow      — незакоммиченные изменения, это предупреждение
+#   green       — чисто / застейджено / команда прошла
+#   cyan        — «ты не там, где думаешь»: чужой хост, чужой docker/k8s контекст
+#   bright-blue — версии языков и рантаймов, справочная информация
+#   dimmed      — правый промпт: длительность команды и время
 #
 # Ветка занимает обычный красный, поэтому сигналы об ошибке разведены в bright:
 # иначе розовое имя ветки в каждой строке замыливало бы ✗ упавшей команды.
 #
-# Цвета заданы именами ANSI, а не hex: так промпт следует за палитрой терминала
-# и не рассыплется, если поменять тему.
+# Модули языков, docker и kubernetes starship показывает КОНТЕКСТНО — только
+# когда в каталоге есть соответствующие файлы. В обычном каталоге промпт
+# остаётся коротким, длинным он становится там, где это что-то значит.
 
 add_newline = true
-command_timeout = 200
-format = "[$directory$git_branch$git_status]($style)$character"
+
+# Дефолтные 200 мс легко выбивает git_status на большом репозитории и запрос
+# контекста kubernetes — модуль тогда молча пропадает из промпта.
+command_timeout = 1000
+
+format = """
+$username$hostname$directory$git_branch$git_status$nodejs$golang$java$python$docker_context$kubernetes$jobs$status
+$character"""
+
+right_format = "$cmd_duration$battery$time"
 
 [character]
 # В стоке оба символа были bold cyan, то есть код возврата никак не читался.
 success_symbol = "[❯](bold green)"
 error_symbol = "[✗](bold bright-red)"
+
+# --- Где я -----------------------------------------------------------------
+
+[username]
+# Видно всегда, а не только под root/по SSH: без этого промпт в обычном каталоге
+# схлопывался до одного «~». Под root цвет меняется на bright-red — это как раз
+# тот случай, когда перепутать сессию дорого.
+format = "[$user]($style)"
+style_user = "cyan"
+style_root = "bold bright-red"
+show_always = true
+
+[hostname]
+ssh_only = false
+format = "[@$hostname]($style) "
+style = "cyan"
 
 [directory]
 truncation_length = 2
@@ -34,6 +62,8 @@ repo_root_style = "bold purple"
 repo_root_format = "[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) "
 read_only = " "
 read_only_style = "bright-red"
+
+# --- Git -------------------------------------------------------------------
 
 [git_branch]
 format = "[$branch]($style) "
@@ -58,3 +88,99 @@ stashed    = "[](purple)"
 staged     = "[](green)"
 renamed    = ""
 deleted    = "[ ](bright-red)"
+
+# --- Рантаймы: показываются только в каталогах соответствующих проектов ------
+
+[nodejs]
+format = "[$symbol($version )]($style)"
+symbol = " "
+style = "bright-blue"
+
+[golang]
+format = "[$symbol($version )]($style)"
+symbol = " "
+style = "bright-blue"
+
+[java]
+format = "[$symbol($version )]($style)"
+symbol = " "
+style = "bright-blue"
+
+[python]
+# Виртуальное окружение важнее версии: перепутанный venv это типовая потеря часа.
+format = '[$symbol$pyenv_prefix($version )(\($virtualenv\) )]($style)'
+symbol = " "
+style = "bright-blue"
+
+# --- Инфраструктура ---------------------------------------------------------
+
+[docker_context]
+# only_with_files по умолчанию true: не мозолит глаза вне docker-проектов.
+format = "[$symbol$context]($style) "
+symbol = " "
+style = "cyan"
+
+[kubernetes]
+# Модуль выключен в starship по умолчанию. Включён, но ограничен каталогами
+# k8s-проектов — иначе контекст висел бы в каждой строке, включая ~.
+disabled = false
+format = '[$symbol$context( \($namespace\))]($style) '
+symbol = "☸ "
+style = "cyan"
+detect_files = ["k8s.yaml", "skaffold.yaml", "Chart.yaml", "kustomization.yaml"]
+detect_folders = ["k8s", "kubernetes", "helm", ".helm", "manifests"]
+
+# --- Состояние последней команды --------------------------------------------
+
+[jobs]
+# Сколько задач висит в фоне. Легко забыть про Ctrl+Z и потом гадать.
+format = "[$symbol$number]($style) "
+symbol = "⇶ "
+style = "cyan"
+number_threshold = 1
+symbol_threshold = 1
+
+[status]
+# Символ ✗ показывает сам факт падения, а этот модуль — код. 130 (Ctrl+C) и
+# 137 (OOM-kill) читаются мгновенно, если код виден.
+disabled = false
+format = '[$status]($style) '
+style = "bold bright-red"
+map_symbol = false
+pipestatus = true
+pipestatus_format = '[$pipestatus]($style) '
+
+[cmd_duration]
+# Меньше двух секунд не показывать — иначе цифра мелькает после каждой команды.
+min_time = 2000
+format = "[ $duration]($style)"
+style = "dimmed white"
+
+[battery]
+# Ноутбук, и вопрос автономности здесь живой — заряд видно всегда, а не только
+# на последних процентах. Порядок блоков display важен: starship берёт первый,
+# чей threshold не меньше текущего заряда.
+format = "[ $symbol$percentage]($style)"
+full_symbol = ""
+charging_symbol = ""
+discharging_symbol = ""
+unknown_symbol = ""
+empty_symbol = ""
+
+[[battery.display]]
+threshold = 15
+style = "bold bright-red"
+
+[[battery.display]]
+threshold = 30
+style = "yellow"
+
+[[battery.display]]
+threshold = 100
+style = "dimmed white"
+
+[time]
+disabled = false
+format = "[ $time]($style)"
+time_format = "%H:%M"
+style = "dimmed white"
