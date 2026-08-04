@@ -10,9 +10,13 @@
 #                 отставание от origin, read-only каталог (#ff7ab8)
 #   yellow      — незакоммиченные изменения, это предупреждение
 #   green       — чисто / застейджено / команда прошла
-#   cyan        — «ты не там, где думаешь»: чужой хост, чужой docker/k8s контекст
-#   bright-blue — версии языков и рантаймов, справочная информация
-#   dimmed      — правый промпт: длительность команды и время
+#   cyan        — имя пользователя, docker/k8s контекст
+#   yellow      — имя хоста (парой с cyan, чтобы user@host не читался одним словом)
+#   bright-blue — версии языков и рантаймов, длительность команды
+#   purple      — часы в правом промпте
+#
+# Приглушённых (dimmed) стилей здесь нет сознательно: на этой палитре они
+# выглядят грязно-серыми и выпадают из общего вида.
 #
 # Ветка занимает обычный красный, поэтому сигналы об ошибке разведены в bright:
 # иначе розовое имя ветки в каждой строке замыливало бы ✗ упавшей команды.
@@ -45,14 +49,18 @@ error_symbol = "[✗](bold bright-red)"
 # схлопывался до одного «~». Под root цвет меняется на bright-red — это как раз
 # тот случай, когда перепутать сессию дорого.
 format = "[$user]($style)"
-style_user = "cyan"
+style_user = "bold cyan"
 style_root = "bold bright-red"
 show_always = true
 
 [hostname]
 ssh_only = false
-format = "[@$hostname]($style) "
-style = "cyan"
+# Пользователь и хост разными цветами: одним они читались как одно слово.
+# Хост жёлтый, а не зелёный: мятный #4bf3c8 и циан #38f2ff соседние по тону и
+# на глаз всё равно сливались. Жёлтый #ffd866 отстоит от циана максимально.
+# Разделитель @ оставлен белым, чтобы граница была видна.
+format = "[@](white)[$hostname]($style) "
+style = "bold yellow"
 
 [directory]
 truncation_length = 2
@@ -154,7 +162,7 @@ pipestatus_format = '[$pipestatus]($style) '
 # Меньше двух секунд не показывать — иначе цифра мелькает после каждой команды.
 min_time = 2000
 format = "[ $duration]($style)"
-style = "dimmed white"
+style = "bright-blue"
 
 [battery]
 # Ноутбук, и вопрос автономности здесь живой — заряд видно всегда, а не только
@@ -177,10 +185,10 @@ style = "yellow"
 
 [[battery.display]]
 threshold = 100
-style = "dimmed white"
+style = "green"
 
 [time]
 disabled = false
 format = "[ $time]($style)"
 time_format = "%H:%M"
-style = "dimmed white"
+style = "purple"
