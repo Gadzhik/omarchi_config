@@ -5,12 +5,14 @@
 # Роли цветов:
 #   purple  — имя репозитория (единственное, что нужно найти глазами сразу)
 #   white   — путь внутри репозитория, подчинённая информация
-#   red     — ветка (#ff4f9a), а также конфликты и ненулевой код возврата
-#   yellow  — незакоммиченные изменения, это предупреждение
-#   green   — чисто / застейджено / команда прошла
+#   red        — ветка (#ff4f9a), и больше ничего
+#   bright-red — всё плохое: ✗, конфликты, удалённые файлы, отставание от
+#                origin, read-only каталог (#ff7ab8)
+#   yellow     — незакоммиченные изменения, это предупреждение
+#   green      — чисто / застейджено / команда прошла
 #
-# Ветка и сигналы об ошибке делят красный сознательно, по просьбе. Различаются
-# начертанием и позицией: ветка курсивная и всегда вторая, ✗ и конфликты жирные.
+# Ветка занимает обычный красный, поэтому сигналы об ошибке разведены в bright:
+# иначе розовое имя ветки в каждой строке замыливало бы ✗ упавшей команды.
 #
 # Цвета заданы именами ANSI, а не hex: так промпт следует за палитрой терминала
 # и не рассыплется, если поменять тему.
@@ -22,7 +24,7 @@ format = "[$directory$git_branch$git_status]($style)$character"
 [character]
 # В стоке оба символа были bold cyan, то есть код возврата никак не читался.
 success_symbol = "[❯](bold green)"
-error_symbol = "[✗](bold red)"
+error_symbol = "[✗](bold bright-red)"
 
 [directory]
 truncation_length = 2
@@ -31,7 +33,7 @@ style = "white"
 repo_root_style = "bold purple"
 repo_root_format = "[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) "
 read_only = " "
-read_only_style = "red"
+read_only_style = "bright-red"
 
 [git_branch]
 format = "[$branch]($style) "
@@ -47,12 +49,12 @@ format     = '[$all_status$ahead_behind]($style)'
 style      = "yellow"
 ahead      = "[⇡${count}](green) "
 diverged   = "[⇕⇡${ahead_count}⇣${behind_count}](bold yellow) "
-behind     = "[⇣${count}](red) "
-conflicted = "[ ](bold red)"
+behind     = "[⇣${count}](bright-red) "
+conflicted = "[ ](bold bright-red)"
 up_to_date = "[ ](green)"
 untracked  = "? "
 modified   = " "
 stashed    = "[](purple)"
 staged     = "[](green)"
 renamed    = ""
-deleted    = "[ ](red)"
+deleted    = "[ ](bright-red)"
