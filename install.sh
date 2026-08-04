@@ -136,6 +136,24 @@ if [[ -f $DIR/system/etc/sysctl.d/99-dirty-writeback.conf ]]; then
   sudo sysctl --system >/dev/null 2>&1 || warn "sysctl --system"
 fi
 
+# Idle power: let PCI devices runtime-suspend, and switch PCIe ASPM off the
+# BIOS default. Neither is model-specific. Kernel leaves power/control=on for
+# every device whose driver does not opt in — on this machine that is both
+# NVMe, the CNVi Wi-Fi and a handful of PCH blocks. See the file comments.
+if [[ -f $DIR/system/etc/udev/rules.d/99-pcie-runtime-pm.rules ]]; then
+  sudo install -Dm644 "$DIR/system/etc/udev/rules.d/99-pcie-runtime-pm.rules" \
+                      /etc/udev/rules.d/99-pcie-runtime-pm.rules
+  sudo udevadm control --reload 2>/dev/null || true
+  sudo udevadm trigger --subsystem-match=pci 2>/dev/null || warn "udevadm trigger pci"
+fi
+if [[ -f $DIR/system/etc/tmpfiles.d/99-pcie-aspm.conf ]]; then
+  sudo install -Dm644 "$DIR/system/etc/tmpfiles.d/99-pcie-aspm.conf" \
+                      /etc/tmpfiles.d/99-pcie-aspm.conf
+  # --create applies it now; on later boots systemd-tmpfiles-setup does it.
+  sudo systemd-tmpfiles --create /etc/tmpfiles.d/99-pcie-aspm.conf 2>/dev/null ||
+    warn "ASPM policy not applied — firmware may not have handed ASPM to the OS"
+fi
+
 # ---------------------------------------------------------------------------
 # 4. Default applications
 # ---------------------------------------------------------------------------

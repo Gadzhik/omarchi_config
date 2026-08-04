@@ -167,6 +167,60 @@ for d in /sys/block/nvme[0-9]n[0-9]; do
 done
 
 # ---------------------------------------------------------------------------
+head_ "Idle power: PCIe runtime PM and ASPM"
+# ---------------------------------------------------------------------------
+for f in /etc/udev/rules.d/99-pcie-runtime-pm.rules /etc/tmpfiles.d/99-pcie-aspm.conf; do
+  rel="system${f}"
+  if [[ ! -e $f ]]; then
+    bad "$f — missing"
+  elif diff -q "$DIR/$rel" "$f" >/dev/null 2>&1; then
+    ok "$f"
+  else
+    bad "$f — differs from the repo"
+  fi
+done
+
+# The rule is only worth anything if devices actually flipped to "auto".
+on=0; auto=0
+for f in /sys/bus/pci/devices/*/power/control; do
+  [[ -r $f ]] || continue
+  [[ "$(cat "$f")" == on ]] && on=$((on+1)) || auto=$((auto+1))
+done
+if [[ $((on + auto)) -eq 0 ]]; then
+  note "no PCI power/control attributes readable — skipped"
+elif [[ $on -eq 0 ]]; then
+  ok "PCI runtime PM: all $auto devices on 'auto'"
+elif [[ $on -le 2 ]]; then
+  ok "PCI runtime PM: $auto on 'auto', $on still 'on' (host bridge and friends)"
+else
+  bad "PCI runtime PM: $on devices still on 'on' — run: sudo udevadm trigger --subsystem-match=pci"
+fi
+
+# Both NVMe specifically: they are the reason this exists.
+for d in /sys/class/nvme/nvme[0-9]; do
+  [[ -e $d ]] || continue
+  ctl="$d/device/power/control"
+  [[ -r $ctl ]] || continue
+  model=$(cat "$d/model" 2>/dev/null | xargs)
+  if [[ "$(cat "$ctl")" == auto ]]; then
+    ok "$(basename "$d") ($model) runtime PM = auto"
+  else
+    bad "$(basename "$d") ($model) runtime PM = on — will never enter D3"
+  fi
+done
+
+ASPM=/sys/module/pcie_aspm/parameters/policy
+if [[ ! -r $ASPM ]]; then
+  note "pcie_aspm policy unreadable — skipped"
+elif grep -q '\[powersave\]' "$ASPM"; then
+  ok "PCIe ASPM policy = powersave"
+elif grep -q '\[default\]' "$ASPM"; then
+  bad "PCIe ASPM policy = default — firmware kept ASPM control, enable it in BIOS"
+else
+  note "PCIe ASPM policy = $(sed 's/.*\[\(.*\)\].*/\1/' "$ASPM")  (repo expects powersave)"
+fi
+
+# ---------------------------------------------------------------------------
 printf '\n\033[1m%s\033[0m\n' "passed: $PASS   failed: $FAIL   notes: $SKIP"
 if [[ $FAIL -gt 0 ]]; then
   printf '\033[31m%s\033[0m\n' "Something needs attention — see the ✗ lines above."
