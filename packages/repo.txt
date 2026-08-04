@@ -9,6 +9,10 @@ pycharm-community-edition
 jdk21-openjdk
 go
 # Node.js is managed by mise (see install.sh), not a repo package.
+python-pipx          # Arch marks the system Python externally-managed, so `pip install --user`
+                     # refuses to run. pipx gives each CLI app its own venv under
+                     # ~/.local/share/pipx/ and symlinks only the entry point into
+                     # ~/.local/bin, which is already on PATH. Used for sherlock-project.
 
 # --- Databases ---
 postgresql
