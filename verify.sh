@@ -144,6 +144,29 @@ for g in docker libvirt kvm; do
 done
 
 # ---------------------------------------------------------------------------
+head_ "Disk IO responsiveness"
+# ---------------------------------------------------------------------------
+want_dirty=268435456
+got_dirty=$(cat /proc/sys/vm/dirty_bytes 2>/dev/null || echo 0)
+if [[ $got_dirty == "$want_dirty" ]]; then
+  ok "vm.dirty_bytes = 256M"
+elif [[ $got_dirty == 0 ]]; then
+  bad "vm.dirty_bytes unset — ratio-based limit lets multi-GB writeback stall the desktop"
+else
+  note "vm.dirty_bytes = $got_dirty (repo expects $want_dirty)"
+fi
+
+for d in /sys/block/nvme[0-9]n[0-9]; do
+  [[ -e $d ]] || continue
+  name=${d##*/}
+  if grep -q '\[bfq\]' "$d/queue/scheduler" 2>/dev/null; then
+    ok "$name scheduler = bfq"
+  else
+    note "$name scheduler = $(sed 's/.*\[\(.*\)\].*/\1/' "$d/queue/scheduler" 2>/dev/null)"
+  fi
+done
+
+# ---------------------------------------------------------------------------
 printf '\n\033[1m%s\033[0m\n' "passed: $PASS   failed: $FAIL   notes: $SKIP"
 if [[ $FAIL -gt 0 ]]; then
   printf '\033[31m%s\033[0m\n' "Something needs attention — see the ✗ lines above."

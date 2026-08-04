@@ -1,0 +1,10 @@
+# Планировщик ввода-вывода: bfq для интерактивной отзывчивости.
+# По умолчанию ядро ставит NVMe в "none" — при массовой записи (копирование
+# больших файлов на LUKS+btrfs) мелкие интерактивные чтения полностью
+# вытесняются, и десктоп замирает. bfq даёт честность в очереди.
+
+# NVMe
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme[0-9]n[0-9]", ATTR{queue/scheduler}="bfq"
+
+# SATA/USB SSD (rotational=0)
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="bfq"

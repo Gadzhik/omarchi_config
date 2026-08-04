@@ -119,6 +119,23 @@ if [[ -f $DIR/system/etc/systemd/logind.conf.d/10-lid-external-power.conf ]]; th
   sudo systemctl reload systemd-logind 2>/dev/null || warn "reload systemd-logind"
 fi
 
+# The IO scheduler is not model-specific either. Kernel defaults NVMe to "none",
+# which has no queue fairness: a bulk write starves interactive reads and the
+# desktop freezes. bfq costs a few percent of peak throughput and is worth it.
+if [[ -f $DIR/system/etc/udev/rules.d/99-io-scheduler.rules ]]; then
+  sudo install -Dm644 "$DIR/system/etc/udev/rules.d/99-io-scheduler.rules" \
+                      /etc/udev/rules.d/99-io-scheduler.rules
+  sudo udevadm control --reload 2>/dev/null || true
+  sudo udevadm trigger --subsystem-match=block 2>/dev/null || warn "udevadm trigger block"
+fi
+
+# Dirty-page limits: the actual fix for the desktop freezing under a big copy.
+if [[ -f $DIR/system/etc/sysctl.d/99-dirty-writeback.conf ]]; then
+  sudo install -Dm644 "$DIR/system/etc/sysctl.d/99-dirty-writeback.conf" \
+                      /etc/sysctl.d/99-dirty-writeback.conf
+  sudo sysctl --system >/dev/null 2>&1 || warn "sysctl --system"
+fi
+
 # ---------------------------------------------------------------------------
 # 4. Default applications
 # ---------------------------------------------------------------------------
