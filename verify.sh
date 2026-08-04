@@ -21,7 +21,8 @@ MODEL="$(cat /sys/class/dmi/id/product_name 2>/dev/null || echo unknown)"
 head_ "Home configuration"
 # ---------------------------------------------------------------------------
 for f in .config/hypr/input.conf .config/hypr/bindings.conf .config/alacritty/alacritty.toml \
-         .config/waybar/config.jsonc .zshrc .local/bin/per-window-layout; do
+         .config/starship.toml .config/waybar/config.jsonc .zshrc \
+         .local/bin/per-window-layout; do
   if [[ ! -e $HOME/$f ]]; then
     bad "$f — missing in \$HOME"
   elif diff -q "$DIR/home/$f" "$HOME/$f" >/dev/null 2>&1; then

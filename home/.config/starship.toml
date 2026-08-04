@@ -1,0 +1,54 @@
+# Промпт. Отличается от дефолта Omarchy тем, что цвет здесь несёт смысл, а не
+# украшает: в стоковом конфиге directory, git_branch, git_status и character
+# все покрашены в cyan, и на яркой палитре строка сливается в одно пятно.
+#
+# Роли цветов:
+#   purple  — имя репозитория (единственное, что нужно найти глазами сразу)
+#   white   — путь внутри репозитория, подчинённая информация
+#   cyan    — ветка, один неоновый акцент на всю строку
+#   yellow  — незакоммиченные изменения, это предупреждение
+#   green   — чисто / застейджено / команда прошла
+#   red     — конфликты, удалённые файлы, ненулевой код возврата
+#
+# Цвета заданы именами ANSI, а не hex: так промпт следует за палитрой терминала
+# и не рассыплется, если поменять тему.
+
+add_newline = true
+command_timeout = 200
+format = "[$directory$git_branch$git_status]($style)$character"
+
+[character]
+# В стоке оба символа были bold cyan, то есть код возврата никак не читался.
+success_symbol = "[❯](bold green)"
+error_symbol = "[✗](bold red)"
+
+[directory]
+truncation_length = 2
+truncation_symbol = "…/"
+style = "white"
+repo_root_style = "bold purple"
+repo_root_format = "[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) "
+read_only = " "
+read_only_style = "red"
+
+[git_branch]
+format = "[$branch]($style) "
+style = "italic cyan"
+
+[git_status]
+# $ahead_behind добавлен осознанно: в дефолте его не было, поэтому ahead/behind/
+# diverged были описаны, но не рисовались никогда — расхождение с origin
+# оставалось невидимым.
+format     = '[$all_status$ahead_behind]($style)'
+style      = "yellow"
+ahead      = "[⇡${count}](green) "
+diverged   = "[⇕⇡${ahead_count}⇣${behind_count}](bold yellow) "
+behind     = "[⇣${count}](red) "
+conflicted = "[ ](bold red)"
+up_to_date = "[ ](green)"
+untracked  = "? "
+modified   = " "
+stashed    = "[](purple)"
+staged     = "[](green)"
+renamed    = ""
+deleted    = "[ ](red)"
