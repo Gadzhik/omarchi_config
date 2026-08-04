@@ -194,5 +194,7 @@ style = "green"
 [time]
 disabled = false
 format = "[ $time]($style)"
-time_format = "%H:%M:%S"
+# ISO-порядок, а не 04.08.2026: однозначно читается и сортируется, и совпадает
+# с тем, как даты записаны в комментариях к конфигам в этом репозитории.
+time_format = "%Y-%m-%d %H:%M:%S"
 style = "purple"
