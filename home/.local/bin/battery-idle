@@ -1,0 +1,73 @@
+#!/bin/bash
+# Enable/disable the on-battery idle actions: screen blanking, auto-lock, suspend.
+#
+# hypridle owns the three timers (see ~/.config/hypr/hypridle.conf); they are all
+# gated on this script's `check` subcommand, which succeeds only when running on
+# battery AND the toggle is on. Turning it off keeps the machine awake on battery
+# — useful for a long download or a video — without touching the AC behaviour or
+# the lid switch, which are handled elsewhere.
+#
+#   battery-idle            toggle and notify
+#   battery-idle on|off     set explicitly
+#   battery-idle reset      force back on, silently (run from Hyprland autostart)
+#   battery-idle status     print current state
+#   battery-idle check      exit 0 if idle actions should fire (used by hypridle)
+
+AC=/sys/class/power_supply/ADP1/online
+STATE_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/toggles/battery-idle"
+
+on_ac() { [[ "$(cat "$AC" 2>/dev/null)" == "1" ]]; }
+
+# Default to enabled: an absent state file means stock behaviour.
+enabled() { [[ "$(cat "$STATE_FILE" 2>/dev/null)" != "off" ]]; }
+
+set_state() {
+  mkdir -p "${STATE_FILE%/*}"
+  echo "$1" >"$STATE_FILE"
+}
+
+notify() {
+  if [[ "$1" == on ]]; then
+    notify-send -u low "󰒲  Простой на батарее включён" \
+      "Экран 3 мин · блокировка 5 мин · сон 15 мин"
+  else
+    notify-send -u low "󰒳  Простой на батарее отключён" \
+      "Экран не гаснет, сна не будет — батарея сядет"
+  fi
+}
+
+case "${1:-toggle}" in
+  check)
+    # Both conditions must hold for hypridle to act.
+    on_ac && exit 1
+    enabled || exit 1
+    exit 0
+    ;;
+  on|off)
+    set_state "$1"
+    notify "$1"
+    ;;
+  reset)
+    # Session start: never inherit a stale "off" from last login, or the machine
+    # would sit on battery indefinitely without ever suspending. Silent on purpose.
+    set_state on
+    ;;
+  toggle)
+    if enabled; then set_state off; notify off; else set_state on; notify on; fi
+    ;;
+  status)
+    enabled && state=on || state=off
+    on_ac && power="сеть" || power="батарея"
+    echo "простой на батарее: $state"
+    echo "питание сейчас:     $power"
+    if [[ "$state" == on && "$power" == "батарея" ]]; then
+      echo "таймеры активны:    экран 3 мин, блокировка 5 мин, сон 15 мин"
+    else
+      echo "таймеры активны:    нет"
+    fi
+    ;;
+  *)
+    echo "usage: ${0##*/} [on|off|toggle|reset|status|check]" >&2
+    exit 2
+    ;;
+esac

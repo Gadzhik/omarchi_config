@@ -1,0 +1,57 @@
+#!/bin/bash
+# Put a big, hard-to-miss window on screen when the battery runs low.
+#
+# Mako notifications are too easy to overlook for something that ends in a dead
+# machine, so this opens a floating Alacritty window instead — sized and centred
+# by the window rules at the bottom of ~/.config/hypr/hyprland.conf. No extra
+# packages needed; Alacritty is already the default terminal here.
+#
+# The window closes on any keypress, or by itself after HOLD seconds. It fires
+# once per discharge episode and re-arms only after the battery is back above
+# CLEAR, so it never nags while you hover around the threshold.
+#
+# Launched from Hyprland autostart.
+
+# Overridable from the environment so the thing can actually be tested:
+#   THRESHOLD=100 HOLD=10 POLL=5 battery-low-warn
+BAT=${BAT:-/sys/class/power_supply/BAT0}
+THRESHOLD=${THRESHOLD:-20}    # percent — warn below this
+CLEAR=${CLEAR:-25}            # percent — re-arm the warning above this
+HOLD=${HOLD:-60}              # seconds the window stays up on its own
+POLL=${POLL:-60}              # seconds between checks
+
+warned=0
+
+show_warning() {
+  local cap=$1
+  # \e[1;31m = bold red. read -t/-n gives us "auto-close OR any key" in one call.
+  alacritty --class battery-warning \
+    -o font.size=26 \
+    -e sh -c "
+      printf '\n\n'
+      printf '  \033[1;31m▲  БАТАРЕЯ %s%%\033[0m\n\n' '$cap'
+      printf '  \033[1mОсталось меньше ${THRESHOLD}%%.\033[0m\n\n'
+      printf '  Подключи зарядку, иначе ноутбук\n'
+      printf '  уснёт и сеанс прервётся.\n\n\n'
+      printf '  \033[2mлюбая клавиша — закрыть · авто через ${HOLD} с\033[0m\n'
+      read -t $HOLD -n 1 _
+    " >/dev/null 2>&1 &
+}
+
+while :; do
+  cap=$(cat "$BAT/capacity" 2>/dev/null)
+  status=$(cat "$BAT/status" 2>/dev/null)
+
+  if [[ -n "$cap" ]]; then
+    if [[ "$status" == "Discharging" && "$cap" -lt "$THRESHOLD" && "$warned" -eq 0 ]]; then
+      show_warning "$cap"
+      warned=1
+    fi
+    # Re-arm once we are charging again or comfortably above the threshold.
+    if [[ "$status" != "Discharging" || "$cap" -ge "$CLEAR" ]]; then
+      warned=0
+    fi
+  fi
+
+  sleep "$POLL"
+done
