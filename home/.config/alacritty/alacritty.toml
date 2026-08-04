@@ -102,3 +102,63 @@ bindings = [
 { key = "а", mods = "Control|Shift", action = "SearchForward" },   # Ctrl+Shift+F
 { key = "и", mods = "Control|Shift", action = "SearchBackward" }   # Ctrl+Shift+B
 ]
+
+# ---------------------------------------------------------------------------
+# Цвета. Перекрывают то, что приходит импортом из активной темы Omarchy
+# (~/.config/omarchy/current/theme/alacritty.toml) — значения в самом файле
+# у Alacritty приоритетнее импортированных, слияние идёт по полям.
+#
+# Палитра Synthwave Neon: фиолетово-чёрный фон в тон обоям vim-omarchy-neon,
+# кислотные акценты, чисто белый текст вместо приглушённого #a9b1d6 из
+# Tokyo Night. Меняется ТОЛЬКО терминал — waybar, рамки окон, walker и обои
+# по-прежнему берут цвета из темы Omarchy.
+#
+# Откат: удалить всё от [colors.primary] до конца файла.
+# ---------------------------------------------------------------------------
+[colors.primary]
+background = "#14121f"
+foreground = "#ffffff"
+
+[colors.cursor]
+text = "#14121f"
+cursor = "#38f2ff"
+
+[colors.vi_mode_cursor]
+text = "#14121f"
+cursor = "#c77dff"
+
+[colors.selection]
+text = "#ffffff"
+background = "#3a2d5c"
+
+[colors.search.matches]
+foreground = "#14121f"
+background = "#ffd866"
+
+[colors.search.focused_match]
+foreground = "#14121f"
+background = "#ff4f9a"
+
+[colors.footer_bar]
+foreground = "#14121f"
+background = "#c77dff"
+
+[colors.normal]
+black   = "#1a1727"
+red     = "#ff4f9a"
+green   = "#4bf3c8"
+yellow  = "#ffd866"
+blue    = "#4d9fff"
+magenta = "#c77dff"
+cyan    = "#38f2ff"
+white   = "#e6e0ff"
+
+[colors.bright]
+black   = "#4a4270"
+red     = "#ff7ab8"
+green   = "#7ff9dd"
+yellow  = "#ffe58a"
+blue    = "#82bcff"
+magenta = "#dda0ff"
+cyan    = "#7ff8ff"
+white   = "#ffffff"
