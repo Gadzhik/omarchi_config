@@ -97,7 +97,7 @@ OpenVPN, Docker (+ compose), QEMU/KVM + libvirt + virt-manager (+ edk2-ovmf, swt
 | `hypr/monitors.conf` | Display scale **1.6** (`GDK_SCALE=1.75`) — panel allows only clean 1.6/2.0 |
 | `hypr/input.conf` | Layout `us,ru`; switch key **Alt+Shift** (`grp:alt_shift_toggle`, was Ctrl+Shift); `resolve_binds_by_sym = false` so `SUPER+<letter>` resolves by key **position** and keeps working in the ru layout (the Latin layout must stay first); touchpad `sensitivity = 0.55` via a `device` block, so an external mouse keeps system speed |
 | `hypr/hypridle.conf` | Screensaver **off**; screen off after **3 min on battery**; lock after **5 min on battery**; suspend after **15 min on battery**. All three are battery-only — on AC the machine never idles out |
-| `hypr/bindings.conf` | **SUPER+V** → clipboard history (walker), overriding default "Universal paste"; **SUPER+ALT+BACKSPACE** → peek through the focused window while held |
+| `hypr/bindings.conf` | **SUPER+V** → clipboard history (walker), overriding default "Universal paste"; **SUPER+ALT+BACKSPACE** → peek through the focused window while held; **SUPER+ALT+R** → screen record start/stop (add SHIFT for desktop audio), a one-key path around the `ALT+PRINT` menu |
 | `hypr/autostart.conf` | Launches `refresh-rate-by-power` and `per-window-layout` |
 | `hypr/hyprlock.conf` | Lock screen shows **clock, date, battery %/status** |
 | `alacritty/alacritty.toml` | Font size **12**; **62 Cyrillic key bindings** so `Ctrl+<letter>` / `Alt+<letter>` keep working in the ru layout — Alacritty matches bindings by the *character* the layout produces, and `Ctrl+ф` yields no control code at all (see `docs/keyboard-layout-shortcuts.md`) |
