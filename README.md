@@ -10,9 +10,7 @@ omarchi_config/
 ├── vim-omarchy-neon.png    # → the active wallpaper (symlink, for a quick look)
 ├── packages/
 │   ├── repo.txt            # official-repo packages to install
-│   ├── aur.txt             # AUR packages to install
-│   ├── full-explicit.txt   # snapshot: ALL explicitly-installed pkgs (reference)
-│   └── full-aur.txt        # snapshot: ALL foreign/AUR pkgs (reference)
+│   └── aur.txt             # AUR packages to install
 ├── wallpaper/              # source for the cheat-sheet wallpaper (not deployed)
 ├── docs/                   # setup notes for tools that live outside home/
 ├── scripts/                # generators/helpers used to produce config (not deployed)
@@ -86,6 +84,15 @@ OpenVPN, Docker (+ compose), QEMU/KVM + libvirt + virt-manager (+ edk2-ovmf, swt
 **AUR:** Postman, LM Studio, Slack, Android Studio, pgAdmin 4, ble.sh.
 **Via Omarchy:** VS Code (`omarchy install vscode`).
 **Via mise:** Node.js LTS (npm included; `mise use -g pnpm`/`yarn` for those).
+
+`packages/` lists only what `install.sh` installs. A full inventory of the machine
+is one command away when you actually need it, so it is not kept here — it would be
+a running list of everything its owner uses:
+
+```bash
+pacman -Qqe   # everything explicitly installed
+pacman -Qqm   # everything foreign / from the AUR
+```
 
 ---
 
