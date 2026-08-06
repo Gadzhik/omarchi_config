@@ -1,4 +1,4 @@
-# Omarchy config — igadzhi
+# Omarchy config — Redmi Book Pro 16 2024 (Core Ultra 5 125H)
 
 Snapshot of every customization made to this Omarchy (Arch + Hyprland) system,
 plus `install.sh` to reproduce it on a **clean Omarchy install**.

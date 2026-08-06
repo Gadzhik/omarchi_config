@@ -25,8 +25,8 @@
 Пути настраиваются в `gns3_server.conf`:
 
 ```ini
-images_path = /home/igadzhi/GNS3/images
-projects_path = /home/igadzhi/GNS3/projects
+images_path = ~/GNS3/images
+projects_path = ~/GNS3/projects
 additional_images_paths =
 ```
 

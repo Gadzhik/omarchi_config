@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Deploy igadzhi's Omarchy configuration onto a clean Omarchy install.
+# Deploy this Omarchy configuration onto a clean Omarchy install.
 # Run as the normal user (it calls sudo where needed):  ./install.sh
 #
 # Idempotent: safe to re-run. Skips work that is already done.

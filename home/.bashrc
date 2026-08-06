@@ -24,6 +24,9 @@ eval "$(fzf --bash)"
 [[ ${BLE_VERSION-} ]] && ble-attach
 
 # Added by LM Studio CLI (lms)
-export PATH="$PATH:/home/igadzhi/.lmstudio/bin"
+export PATH="$PATH:$HOME/.lmstudio/bin"
 # End of LM Studio CLI section
 
+
+# --- Тулчейн разработки (Rust/Java/Android) ---
+[ -r ~/.config/devtools.env.sh ] && . ~/.config/devtools.env.sh
