@@ -61,6 +61,15 @@ info "Copying configuration files into \$HOME"
 cp -a "$DIR/home/." "$HOME/"
 chmod +x "$HOME"/.local/bin/* 2>/dev/null || true
 
+# bindings.conf sources bindings-personal.conf, which is not in the repo (it
+# names personal apps and accounts). Hyprland fails the whole config on a
+# missing source, so seed it from the template. Never overwrite an existing one.
+PERSONAL_BINDS="$HOME/.config/hypr/bindings-personal.conf"
+if [[ ! -f $PERSONAL_BINDS ]]; then
+  cp "$PERSONAL_BINDS.example" "$PERSONAL_BINDS"
+  info "Created bindings-personal.conf from the template — add your own app bindings there"
+fi
+
 info "Making zsh the default login shell"
 if [[ ${SHELL:-} != */zsh ]] && command -v zsh >/dev/null; then
   sudo chsh -s /usr/bin/zsh "$USER" 2>/dev/null || warn "run: chsh -s /usr/bin/zsh"

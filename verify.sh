@@ -32,6 +32,14 @@ for f in .config/hypr/input.conf .config/hypr/bindings.conf .config/alacritty/al
   fi
 done
 
+# bindings.conf sources this one, and Hyprland rejects the whole config when a
+# source is missing — so its absence takes down every binding, not just these.
+if [[ -f $HOME/.config/hypr/bindings-personal.conf ]]; then
+  ok ".config/hypr/bindings-personal.conf present"
+else
+  bad ".config/hypr/bindings-personal.conf missing — copy it from the .example"
+fi
+
 for s in "$HOME"/.local/bin/*; do
   [[ -e $s ]] || continue
   [[ -x $s ]] || bad "$(basename "$s") is not executable"
