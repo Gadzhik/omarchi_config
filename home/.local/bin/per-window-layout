@@ -6,8 +6,13 @@
 
 SOCK="${XDG_RUNTIME_DIR}/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.socket2.sock"
 
-declare -A WIN_LAYOUT   # window address -> layout index (0=us, 1=ru ...)
+declare -A WIN_LAYOUT   # window address (or "layer:<ns>") -> layout index (0=us, 1=ru ...)
 CUR_ADDR=""
+LAYER_KEY=""            # set while a keyboard-grabbing layer surface holds focus
+
+# Layer surfaces that take the keyboard. Hyprland sends no activewindowv2 for
+# them, so without this they silently inherit the focused window's layout.
+LAYER_GRABS_KEYBOARD='^(walker)$'
 
 # Physical keyboards to drive (skip virtual / fcitx / power / video / hotkey devices).
 mapfile -t KBDS < <(hyprctl devices -j | python3 -c '
@@ -22,6 +27,10 @@ for k in json.load(sys.stdin)["keyboards"]:
 if [[ ${#KBDS[@]} -eq 0 ]]; then
   mapfile -t KBDS < <(hyprctl devices -j | python3 -c 'import json,sys;[print(k["name"]) for k in json.load(sys.stdin)["keyboards"]]')
 fi
+
+# Set of keyboards we drive, for filtering activelayout events by device.
+declare -A IS_OURS
+for k in "${KBDS[@]}"; do IS_OURS[$k]=1; done
 
 layout_index() { case "$1" in *Russian*) echo 1 ;; *) echo 0 ;; esac; }
 
@@ -42,9 +51,30 @@ socat -u UNIX-CONNECT:"$SOCK" - 2>/dev/null | while IFS= read -r line; do
       CUR_ADDR="${data#0x}"
       apply_layout "${WIN_LAYOUT[$CUR_ADDR]:-0}"
       ;;
+    openlayer)
+      # A launcher opened on top of the focused window: give it its own layout
+      # slot instead of letting it inherit (and later overwrite) the window's.
+      if [[ $data =~ $LAYER_GRABS_KEYBOARD ]]; then
+        LAYER_KEY="layer:$data"
+        apply_layout "${WIN_LAYOUT[$LAYER_KEY]:-0}"
+      fi
+      ;;
+    closelayer)
+      if [[ -n $LAYER_KEY && $LAYER_KEY == "layer:$data" ]]; then
+        LAYER_KEY=""
+        apply_layout "${WIN_LAYOUT[$CUR_ADDR]:-0}"
+      fi
+      ;;
     activelayout)
-      # data is "KEYBOARDNAME,Layout Name"; store it for the focused window.
-      [[ -n $CUR_ADDR ]] && WIN_LAYOUT[$CUR_ADDR]="$(layout_index "${data#*,}")"
+      # data is "KEYBOARDNAME,Layout Name"; store it for whatever holds the
+      # keyboard right now — the layer surface if one is up, else the window.
+      # Only our physical keyboards count: fcitx5's virtual keyboard re-announces
+      # its own (always us) layout on every focus change, which would otherwise
+      # wipe the layout we just remembered for the window.
+      if [[ -n ${IS_OURS[${data%%,*}]} ]]; then
+        key="${LAYER_KEY:-$CUR_ADDR}"
+        [[ -n $key ]] && WIN_LAYOUT[$key]="$(layout_index "${data#*,}")"
+      fi
       ;;
     closewindow)
       unset 'WIN_LAYOUT[${data#0x}]'

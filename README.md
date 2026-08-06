@@ -119,7 +119,12 @@ OpenVPN, Docker (+ compose), QEMU/KVM + libvirt + virt-manager (+ edk2-ovmf, swt
 - **`refresh-rate-by-power`** — on battery: 60 Hz + `power-saver` + dim brightness (saves/restores);
   on AC: 165 Hz + `balanced` + restore. Reacts to power udev events.
 - **`per-window-layout`** — remembers the keyboard layout **per window** (Hyprland has no native
-  per-window layout) via the Hyprland IPC socket.
+  per-window layout) via the Hyprland IPC socket. Two quirks it works around: Hyprland emits **no
+  `activewindowv2` for layer surfaces**, so walker (`SUPER+SPACE`, `SUPER+ALT+SPACE`) used to inherit
+  the layout of whatever window was underneath — it is now tracked by `openlayer`/`closelayer` under
+  its own slot; and **fcitx5's virtual keyboard re-announces its own layout on every focus change**,
+  which used to overwrite the layout just remembered for the window, so `activelayout` events are
+  filtered down to the physical keyboards the daemon actually drives.
 - **`toggle-show-desktop`** — "show desktop" toggle (SUPER+D): jumps to an empty workspace and
   back (Hyprland has no minimize). It deliberately does *not* move windows — stashing them in a
   special workspace and pulling them back re-inserts each one into the dwindle tree next to
