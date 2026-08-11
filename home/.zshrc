@@ -11,6 +11,25 @@ autoload -Uz compinit && compinit -u
 zstyle ':completion:*' menu select
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
 
+# --- Keymap: жёстко emacs, никакого vi ---
+# Без явного bindkey zsh выбирает раскладку по $VISUAL/$EDITOR. У нас EDITOR=nvim —
+# в имени есть "vi", и zsh молча включает vi-режим, где ^? = vi-backward-delete-char:
+# backspace отказывается стирать всё, что попало в буфер до входа в insert-режим,
+# в том числе текст, вставленный из буфера обмена. Должно стоять до плагинов,
+# чтобы autosuggestions / history-substring-search / fzf привязались к emacs.
+bindkey -e
+bindkey '^?' backward-delete-char        # Backspace — на случай, если vi-раскладка вернётся
+bindkey '^H' backward-delete-char        # Ctrl+Backspace в части терминалов
+
+# Home/End/Delete/Ctrl+стрелки zsh по умолчанию не привязывает вообще.
+bindkey '^[[H'    beginning-of-line      # Home
+bindkey '^[OH'    beginning-of-line      # Home (application mode)
+bindkey '^[[F'    end-of-line            # End
+bindkey '^[OF'    end-of-line            # End (application mode)
+bindkey '^[[3~'   delete-char            # Delete
+bindkey '^[[1;5C' forward-word           # Ctrl+Right
+bindkey '^[[1;5D' backward-word          # Ctrl+Left
+
 # --- Omarchy env vars + aliases (bash files, but mostly zsh-compatible) ---
 for _f in envs aliases; do
   [[ -r ~/.local/share/omarchy/default/bash/$_f ]] && source ~/.local/share/omarchy/default/bash/$_f

@@ -114,7 +114,7 @@ pacman -Qqm   # everything foreign / from the AUR
 | `elephant/clipboard.toml` | Clipboard history **max_items = 233** (walker/SUPER+V; images supported) |
 | `mimeapps.list` | **VLC** default video/audio player; **Firefox** default browser |
 | `.bashrc` | **fzf** (Ctrl+R/Ctrl+T/`**`) + **ble.sh** (fish/zsh-like autosuggestions) |
-| `.zshrc` | **zsh** as login shell + zsh-autosuggestions + syntax-highlighting + starship/mise/fzf/zoxide + Omarchy aliases |
+| `.zshrc` | **zsh** as login shell + zsh-autosuggestions + syntax-highlighting + starship/mise/fzf/zoxide + Omarchy aliases. Forces **`bindkey -e`** before the plugins load: with no explicit keymap zsh picks one from `$VISUAL`/`$EDITOR`, and `EDITOR=nvim` contains `vi`, so it silently lands in vi mode where `^?` is `vi-backward-delete-char` and backspace refuses to erase anything that entered the buffer before insert mode — most visibly pasted text. Also binds **Home/End/Delete/Ctrl+←→**, which zsh leaves as `undefined-key` out of the box |
 | `alacritty/alacritty.toml` | Also forces `zsh` as the terminal shell (`[terminal.shell]`) |
 | `.config/mise/config.toml` | Node.js version pin |
 | `.minikube/config/config.json` | minikube defaults: **docker** driver, 4 CPU, 8 GB |
