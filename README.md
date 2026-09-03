@@ -151,10 +151,14 @@ pacman -Qqm   # everything foreign / from the AUR
   `openlayer`/`closelayer` under its own slot; and **fcitx5's virtual keyboard re-announces its own layout on every focus change**,
   which used to overwrite the layout just remembered for the window, so `activelayout` events are
   filtered down to the physical keyboards the daemon actually drives.
-- **`toggle-show-desktop`** — "show desktop" toggle (SUPER+D): jumps to an empty workspace and
+- **`toggle-show-desktop`** — "show desktop" toggle (SUPER+D): jumps to workspace **10** and
   back (Hyprland has no minimize). It deliberately does *not* move windows — stashing them in a
   special workspace and pulling them back re-inserts each one into the dwindle tree next to
-  whatever is focused, which comes back reshuffled.
+  whatever is focused, which comes back reshuffled. An empty *special* workspace does not work
+  either: it overlays the current one rather than replacing it, so the windows stay visible.
+  The destination is fixed rather than `workspace empty`, which sent you to whichever number
+  happened to be free — the same key landing on 2 one time and 5 the next reads as a random
+  workspace switch, not a toggle. Override with `SHOW_DESKTOP_WS`.
 - **`clipboard-history`** — optional cliphist picker. ⚠️ It drove walker, which Omarchy 4 removed;
   the stock clipboard manager is now `SUPER+CTRL+V` (`omarchy-shell`). Kept only for a custom picker.
 - **`window-peek`** — makes the focused window transparent while `SUPER+ALT+BACKSPACE` is held

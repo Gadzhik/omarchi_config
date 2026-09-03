@@ -1,7 +1,13 @@
 #!/bin/bash
 # "Show desktop" toggle for Hyprland (a tiling WM has no real minimize).
-# First press: jump to an empty workspace, leaving the bare desktop.
-# Second press: come back.
+# First press: jump to the desktop workspace, leaving the bare desktop.
+# Second press: come back to where you were.
+#
+# The destination is fixed at workspace 10 rather than "the first empty one":
+# with `workspace empty` the bar indicator landed on whichever number happened
+# to be free, so the same keypress sent you to 2 one time and 5 the next, which
+# reads as a random workspace switch rather than a toggle. Override with
+# SHOW_DESKTOP_WS if 10 is in use.
 #
 # Nothing is moved. An earlier version stashed every window into a special
 # workspace and pulled them back on the second press, but each returning window
@@ -10,6 +16,7 @@
 # impossible by construction.
 
 STATE="${XDG_RUNTIME_DIR:-/tmp}/show-desktop.ws"
+DESKTOP_WS="${SHOW_DESKTOP_WS:-10}"
 
 # Hyprland 0.56 wraps `hyprctl dispatch` arguments in hl.dispatch(), so the old
 # `dispatch workspace <n>` form is now a Lua syntax error. Switching workspaces
@@ -30,8 +37,11 @@ if [[ -s $STATE ]]; then
   exit 0
 fi
 
-# Already looking at a bare desktop - nothing to hide.
+# Already parked on the desktop workspace, or looking at a bare one anyway:
+# nothing to hide, and stashing the current id would make the return trip a
+# no-op that still clears the state file.
+(( cur == DESKTOP_WS )) && exit 0
 (( windows == 0 )) && exit 0
 
 printf '%s' "$cur" >"$STATE"
-goto_workspace empty
+goto_workspace "$DESKTOP_WS"
