@@ -138,6 +138,12 @@ pacman -Qqm   # everything foreign / from the AUR
   udev events, and calls `battery-idle apply` on each one. Backlight is the largest controllable
   draw on this panel — measured 2026-09-03 on battery with the desktop idle: 8.42 W at 5 %,
   **8.88 W at 15 %**, 10.15 W at 40 %, 11.80 W at 70 %.
+  The AC brightness is remembered in `~/.local/state/omarchy/power-mode.brightness`, deliberately
+  **not** in `$XDG_RUNTIME_DIR` like the power state: that directory is wiped on reboot, so the
+  first battery boot would record the already-dimmed screen as the AC value and ratchet AC
+  brightness down to 15 % permanently. Two guards keep it honest — the launch-time `apply initial`
+  never records a value at all (no AC→battery transition happened, so what is on screen means
+  nothing), and a real transition only records a value above `BAT_BRIGHTNESS`.
 - **`per-window-layout`** — remembers the keyboard layout **per window** (Hyprland has no native
   per-window layout) via the Hyprland IPC socket. Two quirks it works around: Hyprland emits **no
   `activewindowv2` for layer surfaces**, so the launcher (`SUPER+SPACE`, `SUPER+ALT+SPACE`) used to

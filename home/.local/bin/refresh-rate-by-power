@@ -12,8 +12,13 @@ AC_RATE=165
 BAT_RATE=60
 BAT_BRIGHTNESS=15    # percent while on battery
 
+# The power state is per-boot on purpose: a fresh login must re-apply, not
+# inherit. The AC brightness is the opposite — it has to outlive a reboot, or
+# the first battery boot records the already-dimmed screen as the AC value and
+# the AC brightness ratchets down to BAT_BRIGHTNESS and stays there.
 STATE_FILE="${XDG_RUNTIME_DIR:-/tmp}/power-mode.state"
-SAVED_BRIGHTNESS="${XDG_RUNTIME_DIR:-/tmp}/power-mode.brightness"
+SAVED_BRIGHTNESS="${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/power-mode.brightness"
+AC_BRIGHTNESS_FALLBACK=40
 
 on_ac() { [[ "$(cat "$AC" 2>/dev/null)" == "1" ]]; }
 
@@ -26,7 +31,13 @@ set_refresh() {
     >/dev/null 2>&1
 }
 
+# apply [initial]
+#   "initial" marks the launch-time call, where no AC->battery transition
+#   actually happened: the brightness on screen is whatever systemd-backlight
+#   restored at boot, so it says nothing about the preferred AC brightness and
+#   must not be recorded as one.
 apply() {
+  local initial="${1:-}"
   local now prev=""
   if on_ac; then now=ac; else now=battery; fi
   [[ -f "$STATE_FILE" ]] && prev="$(cat "$STATE_FILE")"
@@ -34,15 +45,26 @@ apply() {
   echo "$now" >"$STATE_FILE"
 
   if [[ "$now" == "battery" ]]; then
-    # Remember current brightness so we can restore it on AC.
-    brightnessctl -m | cut -d, -f4 | tr -d '%' >"$SAVED_BRIGHTNESS"
+    # Remember the current brightness so AC can restore it — but only when it
+    # is actually brighter than the battery target. On a battery boot the screen
+    # already comes up dimmed (systemd-backlight restores the last value), and
+    # recording that would overwrite a good AC brightness with the dim one.
+    local cur
+    cur="$(brightnessctl -m | cut -d, -f4 | tr -d '%')"
+    if [[ $initial != initial && -n $cur ]] && (( cur > BAT_BRIGHTNESS )); then
+      mkdir -p "$(dirname "$SAVED_BRIGHTNESS")"
+      echo "$cur" >"$SAVED_BRIGHTNESS"
+    fi
+
     set_refresh "$BAT_RATE"
     powerprofilesctl set power-saver 2>/dev/null
     brightnessctl set "${BAT_BRIGHTNESS}%" >/dev/null 2>&1
   else
     set_refresh "$AC_RATE"
     powerprofilesctl set balanced 2>/dev/null
-    [[ -f "$SAVED_BRIGHTNESS" ]] && brightnessctl set "$(cat "$SAVED_BRIGHTNESS")%" >/dev/null 2>&1
+    local restore="$AC_BRIGHTNESS_FALLBACK"
+    [[ -s "$SAVED_BRIGHTNESS" ]] && restore="$(cat "$SAVED_BRIGHTNESS")"
+    brightnessctl set "${restore}%" >/dev/null 2>&1
   fi
 
   # Omarchy 4's idle service has no notion of the power source, so the
@@ -53,7 +75,7 @@ apply() {
 
 # Stored state may be stale after a reboot, so force a fresh apply on launch.
 rm -f "$STATE_FILE"
-apply
+apply initial
 
 # React to every AC adapter / battery change reported by udev.
 stdbuf -oL udevadm monitor --udev --subsystem-match=power_supply 2>/dev/null | while read -r _; do
