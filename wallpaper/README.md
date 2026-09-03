@@ -29,9 +29,9 @@ display — and the 1.6 device scale factor renders it at the panel's native
 3072×1920. Font sizes therefore mean the same thing on the wallpaper as they do
 in any other window, instead of being shrunk by the display scale.
 
-`padding-top` on `.page` is **34px**, which clears the 26px waybar (`height` in
-`waybar/config.jsonc`, and what Hyprland reports as `reserved`) plus a small gap.
-Change one and change the other.
+`padding-top` on `.page` is **34px**, which clears the 26px top bar plus a small
+gap. waybar is gone in Omarchy 4, but the quickshell bar reserves the same 26px —
+check with `hyprctl monitors -j | jq '.[0].reserved'` before changing it.
 
 ## Content
 
@@ -42,6 +42,21 @@ Keybindings are transcribed from the installed sources, not from memory:
   (`config/keymaps.lua`, `plugins/lsp/init.lua`, `plugins/extras/editor/snacks_picker.lua`).
   Accurate for the LazyVim starter with the `neo-tree` extra; re-check after
   a `:Lazy update` that bumps LazyVim itself.
-- **Omarchy** — merged from `~/.local/share/omarchy/default/hypr/bindings/`
-  (`tiling-v2.conf`, `utilities.conf`, `media.conf`) and the personal overrides
-  in `home/.config/hypr/bindings.conf`.
+- **Omarchy** — verified against the live compositor rather than the sources:
+  `hyprctl binds -j` is the truth, since Omarchy 4 defaults
+  (`/usr/share/omarchy/default/hypr/bindings/*.lua`) and the personal overrides in
+  `home/.config/hypr/bindings.lua` both feed it. Re-check after an Omarchy upgrade.
+
+## Fitting the layout
+
+The page is `overflow:hidden` at a fixed 1920×1200 and `section{break-inside:avoid}`,
+so the Omarchy card's two flowed columns cannot spill — content that does not fit is
+silently **clipped**, not scrolled. Two budgets, both found the hard way:
+
+- **~78 rows** across the card's six sections. At 88 the last section fell off the
+  bottom edge.
+- **38 characters** for key + description on one row. `.row` is `white-space:nowrap`,
+  so a longer row widens its column past the card and gets cut at the right edge.
+
+Combine related bindings on one row (`SUPER ^ O / ^ P` → `меню / питание`) rather than
+adding rows. Always re-render and *look at the PNG* before committing.
