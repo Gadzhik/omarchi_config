@@ -1,20 +1,26 @@
 #!/bin/bash
-# Enable/disable the on-battery idle actions: screen blanking, auto-lock, suspend.
+# Enable/disable the on-battery idle actions: screen blanking and auto-lock.
 #
-# hypridle owns the three timers (see ~/.config/hypr/hypridle.conf); they are all
-# gated on this script's `check` subcommand, which succeeds only when running on
-# battery AND the toggle is on. Turning it off keeps the machine awake on battery
-# — useful for a long download or a video — without touching the AC behaviour or
-# the lid switch, which are handled elsewhere.
+# Omarchy 4 replaced hypridle with the shell's own idle service: the timers live
+# in ~/.config/omarchy/shell.json (idle.screensaver, idle.lock, both seconds) and
+# it stops idling entirely while ~/.local/state/omarchy/indicators/stay-awake
+# exists. That flag is all-or-nothing with no notion of the power source, so the
+# battery-only behaviour is reconstructed here: this script owns the user's
+# intent, and apply() translates intent + current power source into the flag.
+#
+# Note that Omarchy 4's idle service does not suspend at all — the old 15-minute
+# on-battery sleep went away with hypridle, and logind's IdleAction is unset.
 #
 #   battery-idle            toggle and notify
 #   battery-idle on|off     set explicitly
 #   battery-idle reset      force back on, silently (run from Hyprland autostart)
+#   battery-idle apply      re-evaluate for the current power source (no notify)
 #   battery-idle status     print current state
-#   battery-idle check      exit 0 if idle actions should fire (used by hypridle)
+#   battery-idle check      exit 0 if idle actions should be allowed right now
 
 AC=/sys/class/power_supply/ADP1/online
 STATE_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/toggles/battery-idle"
+SHELL_CONFIG="$HOME/.config/omarchy/shell.json"
 
 on_ac() { [[ "$(cat "$AC" 2>/dev/null)" == "1" ]]; }
 
@@ -26,48 +32,87 @@ set_state() {
   echo "$1" >"$STATE_FILE"
 }
 
+# Idle actions are allowed only on battery, and only while the toggle is on.
+should_idle() { ! on_ac && enabled; }
+
+# Hand the verdict to Omarchy's idle service. omarchy-toggle-idle is the only
+# supported writer of the stay-awake flag, so go through it rather than touching
+# the file, and keep it quiet — this runs on every power transition.
+apply() {
+  if should_idle; then
+    omarchy-toggle-idle allow-idle >/dev/null 2>&1
+  else
+    omarchy-toggle-idle stay-awake >/dev/null 2>&1
+  fi
+}
+
+# Minutes for a shell.json seconds value, so the notification never drifts from
+# what the shell will actually do.
+idle_minutes() {
+  python3 -c '
+import json, sys
+try:
+    v = json.load(open(sys.argv[1]))["idle"][sys.argv[2]]
+except Exception:
+    print("?")
+else:
+    print(int(v // 60) if v % 60 == 0 else round(v / 60, 1))
+' "$SHELL_CONFIG" "$1" 2>/dev/null || echo "?"
+}
+
 notify() {
+  local screensaver lock
+  screensaver=$(idle_minutes screensaver)
+  lock=$(idle_minutes lock)
+
   if [[ "$1" == on ]]; then
     notify-send -u low "󰒲  Простой на батарее включён" \
-      "Экран 3 мин · блокировка 5 мин · сон 15 мин"
+      "Заставка ${screensaver} мин · блокировка ${lock} мин"
   else
     notify-send -u low "󰒳  Простой на батарее отключён" \
-      "Экран не гаснет, сна не будет — батарея сядет"
+      "Экран не гаснет и не блокируется — батарея сядет"
   fi
 }
 
 case "${1:-toggle}" in
   check)
-    # Both conditions must hold for hypridle to act.
-    on_ac && exit 1
-    enabled || exit 1
-    exit 0
+    should_idle && exit 0 || exit 1
     ;;
-  on|off)
+  on | off)
     set_state "$1"
+    apply
     notify "$1"
     ;;
   reset)
     # Session start: never inherit a stale "off" from last login, or the machine
-    # would sit on battery indefinitely without ever suspending. Silent on purpose.
+    # would sit on battery indefinitely without ever locking. Silent on purpose.
     set_state on
+    apply
+    ;;
+  apply)
+    # Called from refresh-rate-by-power on every AC/battery transition: the
+    # verdict changes with the power source even when the toggle has not moved.
+    apply
     ;;
   toggle)
-    if enabled; then set_state off; notify off; else set_state on; notify on; fi
+    if enabled; then set_state off; else set_state on; fi
+    apply
+    enabled && notify on || notify off
     ;;
   status)
     enabled && state=on || state=off
     on_ac && power="сеть" || power="батарея"
     echo "простой на батарее: $state"
     echo "питание сейчас:     $power"
-    if [[ "$state" == on && "$power" == "батарея" ]]; then
-      echo "таймеры активны:    экран 3 мин, блокировка 5 мин, сон 15 мин"
+    if should_idle; then
+      echo "таймеры активны:    заставка $(idle_minutes screensaver) мин, блокировка $(idle_minutes lock) мин"
     else
       echo "таймеры активны:    нет"
     fi
+    echo "omarchy idle:       $(omarchy-toggle-idle status 2>/dev/null)"
     ;;
   *)
-    echo "usage: ${0##*/} [on|off|toggle|reset|status|check]" >&2
+    echo "usage: ${0##*/} [on|off|toggle|reset|apply|status|check]" >&2
     exit 2
     ;;
 esac

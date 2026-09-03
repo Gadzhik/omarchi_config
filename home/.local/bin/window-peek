@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Hold-to-peek: make the focused window transparent while a key combo is held,
-# then restore it on release. Bound in ~/.config/hypr/bindings.conf.
+# then restore it on release. Bound in ~/.config/hypr/bindings.lua.
 #
 #   window-peek on   -> remember the focused window and drop its opacity
 #   window-peek off  -> restore whatever window "on" touched
@@ -9,9 +9,19 @@
 # 0 = fully invisible. Bump to 0.05-0.15 if you want a faint ghost instead.
 PEEK=${WINDOW_PEEK_OPACITY:-0}
 
-# Hyprland's setprop has no "unset", so restoring means re-applying the values
-# Omarchy's windowrule uses: "opacity <active> <inactive>".
+# Hyprland's set_prop has no "unset", so restoring means re-applying the values
+# Omarchy's window rule uses: "<active> <inactive>".
 RESTORE=${WINDOW_PEEK_RESTORE:-"0.985 0.96"}
+
+# Hyprland 0.56 dropped `hyprctl dispatch setprop` once the config moved to Lua:
+# the CLI now wraps its argument in hl.dispatch(), so the old positional form is
+# a Lua syntax error, and plain `hyprctl setprop` answers "unknown request". The
+# dispatcher takes one table, and 'value' stays a string so the two-number
+# restore ("0.985 0.96") survives as a single argument.
+set_opacity() {
+  hyprctl dispatch \
+    "hl.dsp.window.set_prop({ window = \"address:$1\", prop = \"opacity\", value = \"$2\" })" >/dev/null
+}
 
 STATE="${XDG_RUNTIME_DIR:-/tmp}/window-peek.addr"
 
@@ -24,15 +34,14 @@ on)
   [[ -z $ADDR ]] && exit 0
 
   printf '%s' "$ADDR" >"$STATE"
-  hyprctl dispatch setprop "address:$ADDR" opacity "$PEEK" >/dev/null
+  set_opacity "$ADDR" "$PEEK"
   ;;
 
 off)
   [[ -s $STATE ]] || exit 0
   ADDR=$(<"$STATE")
   rm -f "$STATE"
-  # shellcheck disable=SC2086 # RESTORE is deliberately word-split into args
-  hyprctl dispatch setprop "address:$ADDR" opacity $RESTORE >/dev/null
+  set_opacity "$ADDR" "$RESTORE"
   ;;
 
 *)

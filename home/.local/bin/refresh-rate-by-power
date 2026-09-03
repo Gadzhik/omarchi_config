@@ -17,6 +17,15 @@ SAVED_BRIGHTNESS="${XDG_RUNTIME_DIR:-/tmp}/power-mode.brightness"
 
 on_ac() { [[ "$(cat "$AC" 2>/dev/null)" == "1" ]]; }
 
+# Hyprland 0.56 refuses `hyprctl keyword` under a Lua config ("keyword can't
+# work with non-legacy parsers. Use eval."), so the monitor mode is now set by
+# evaluating the same hl.monitor() call the config uses.
+set_refresh() {
+  hyprctl eval \
+    "hl.monitor({ output = \"$MONITOR\", mode = \"$RES@$1\", position = \"auto\", scale = $SCALE })" \
+    >/dev/null 2>&1
+}
+
 apply() {
   local now prev=""
   if on_ac; then now=ac; else now=battery; fi
@@ -27,14 +36,19 @@ apply() {
   if [[ "$now" == "battery" ]]; then
     # Remember current brightness so we can restore it on AC.
     brightnessctl -m | cut -d, -f4 | tr -d '%' >"$SAVED_BRIGHTNESS"
-    hyprctl keyword monitor "$MONITOR,$RES@$BAT_RATE,auto,$SCALE" >/dev/null 2>&1
+    set_refresh "$BAT_RATE"
     powerprofilesctl set power-saver 2>/dev/null
     brightnessctl set "${BAT_BRIGHTNESS}%" >/dev/null 2>&1
   else
-    hyprctl keyword monitor "$MONITOR,$RES@$AC_RATE,auto,$SCALE" >/dev/null 2>&1
+    set_refresh "$AC_RATE"
     powerprofilesctl set balanced 2>/dev/null
     [[ -f "$SAVED_BRIGHTNESS" ]] && brightnessctl set "$(cat "$SAVED_BRIGHTNESS")%" >/dev/null 2>&1
   fi
+
+  # Omarchy 4's idle service has no notion of the power source, so the
+  # battery-only idle policy has to be re-applied on every transition.
+  # See ~/.local/bin/battery-idle.
+  "$(dirname "$0")/battery-idle" apply 2>/dev/null
 }
 
 # Stored state may be stale after a reboot, so force a fresh apply on launch.

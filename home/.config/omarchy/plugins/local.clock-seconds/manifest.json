@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "local.clock-seconds",
+  "name": "Clock (seconds)",
+  "version": "1.0.0",
+  "author": "igadzhi",
+  "description": "Omarchy's clock widget with a per-second tick, so HH:mm:ss actually counts",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Clock (seconds)",
+    "description": "Date/time label with a calendar popup, ticking every second",
+    "category": "Time",
+    "allowMultiple": false
+  }
+}

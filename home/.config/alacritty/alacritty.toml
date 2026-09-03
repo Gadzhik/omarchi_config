@@ -1,4 +1,4 @@
-general.import = [ "~/.config/omarchy/current/theme/alacritty.toml" ]
+general.import = [ "~/.local/state/omarchy/current/theme/alacritty.toml" ]
 
 [env]
 TERM = "xterm-256color"
@@ -105,7 +105,7 @@ bindings = [
 
 # ---------------------------------------------------------------------------
 # Цвета. Перекрывают то, что приходит импортом из активной темы Omarchy
-# (~/.config/omarchy/current/theme/alacritty.toml) — значения в самом файле
+# (~/.local/state/omarchy/current/theme/alacritty.toml) — значения в самом файле
 # у Alacritty приоритетнее импортированных, слияние идёт по полям.
 #
 # Палитра Synthwave Neon: фиолетово-чёрный фон в тон обоям vim-omarchy-neon,

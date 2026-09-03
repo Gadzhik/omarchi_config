@@ -20,9 +20,9 @@ MODEL="$(cat /sys/class/dmi/id/product_name 2>/dev/null || echo unknown)"
 # ---------------------------------------------------------------------------
 head_ "Home configuration"
 # ---------------------------------------------------------------------------
-for f in .config/hypr/input.conf .config/hypr/bindings.conf .config/alacritty/alacritty.toml \
-         .config/starship.toml .config/waybar/config.jsonc .zshrc \
-         .local/bin/per-window-layout; do
+for f in .config/hypr/hyprland.lua .config/hypr/input.lua .config/hypr/bindings.lua \
+         .config/alacritty/alacritty.toml .config/xdg-terminals.list \
+         .config/starship.toml .zshrc .local/bin/per-window-layout; do
   if [[ ! -e $HOME/$f ]]; then
     bad "$f — missing in \$HOME"
   elif diff -q "$DIR/home/$f" "$HOME/$f" >/dev/null 2>&1; then
@@ -32,12 +32,22 @@ for f in .config/hypr/input.conf .config/hypr/bindings.conf .config/alacritty/al
   fi
 done
 
-# bindings.conf sources this one, and Hyprland rejects the whole config when a
-# source is missing — so its absence takes down every binding, not just these.
-if [[ -f $HOME/.config/hypr/bindings-personal.conf ]]; then
-  ok ".config/hypr/bindings-personal.conf present"
+# Hyprland 0.56+ prefers hyprland.lua and silently ignores a leftover .conf
+# tree, so a config that "looks right" on disk can be one Hyprland never read.
+if hyprctl version &>/dev/null; then
+  if hyprctl configerrors 2>/dev/null | grep -q .; then
+    bad "Hyprland reports config errors — run: hyprctl configerrors"
+  else
+    ok "Hyprland config loads without errors"
+  fi
+
+  if [[ "$(hyprctl getoption input:kb_layout 2>/dev/null | head -1)" == *us,ru* ]]; then
+    ok "Hyprland is running the Lua config (kb_layout = us,ru is live)"
+  else
+    bad "kb_layout is not us,ru at runtime — Hyprland may be reading a stale config"
+  fi
 else
-  bad ".config/hypr/bindings-personal.conf missing — copy it from the .example"
+  note "Hyprland not running — skipped the live config checks"
 fi
 
 for s in "$HOME"/.local/bin/*; do
@@ -48,13 +58,13 @@ done
 # ---------------------------------------------------------------------------
 head_ "Keyboard: shortcuts in the ru layout"
 # ---------------------------------------------------------------------------
-if grep -q '^\s*resolve_binds_by_sym\s*=\s*false' "$HOME/.config/hypr/input.conf" 2>/dev/null; then
+if grep -qE '^[[:space:]]*resolve_binds_by_sym[[:space:]]*=[[:space:]]*false' "$HOME/.config/hypr/input.lua" 2>/dev/null; then
   ok "Hyprland resolves binds by key position"
 else
   bad "resolve_binds_by_sym = false missing — SUPER+<letter> will break in ru"
 fi
 
-if grep -q '^\s*kb_layout\s*=\s*us' "$HOME/.config/hypr/input.conf" 2>/dev/null; then
+if grep -qE '^[[:space:]]*kb_layout[[:space:]]*=[[:space:]]*"us' "$HOME/.config/hypr/input.lua" 2>/dev/null; then
   ok "Latin layout is first in kb_layout"
 else
   bad "kb_layout must start with a Latin layout, otherwise binds resolve against Cyrillic"
@@ -80,6 +90,13 @@ PY
   fi
 else
   note "python3 missing — skipped the Alacritty TOML check"
+fi
+
+if [[ -f $HOME/.config/xdg-terminals.list ]] &&
+   grep -qi '^Alacritty\.desktop' "$HOME/.config/xdg-terminals.list"; then
+  ok "xdg-terminal-exec opens Alacritty (the Cyrillic bindings apply)"
+else
+  bad "xdg-terminals.list does not name Alacritty — new terminals fall back to foot, without the Cyrillic bindings"
 fi
 
 # ---------------------------------------------------------------------------

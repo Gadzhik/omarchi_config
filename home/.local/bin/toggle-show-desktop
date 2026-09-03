@@ -11,6 +11,14 @@
 
 STATE="${XDG_RUNTIME_DIR:-/tmp}/show-desktop.ws"
 
+# Hyprland 0.56 wraps `hyprctl dispatch` arguments in hl.dispatch(), so the old
+# `dispatch workspace <n>` form is now a Lua syntax error. Switching workspaces
+# is hl.dsp.focus with a workspace field; hl.dsp.workspace is a different table
+# (move, toggle_special) and is not what this wants.
+goto_workspace() {
+  hyprctl dispatch "hl.dsp.focus({ workspace = \"$1\" })" >/dev/null
+}
+
 read -r cur windows < <(hyprctl activeworkspace -j | jq -r '"\(.id) \(.windows)"')
 
 if [[ -s $STATE ]]; then
@@ -18,7 +26,7 @@ if [[ -s $STATE ]]; then
   # to it just recreates it empty, which is harmless.
   target=$(<"$STATE")
   rm -f "$STATE"
-  hyprctl dispatch workspace "$target" >/dev/null
+  goto_workspace "$target"
   exit 0
 fi
 
@@ -26,4 +34,4 @@ fi
 (( windows == 0 )) && exit 0
 
 printf '%s' "$cur" >"$STATE"
-hyprctl dispatch workspace empty >/dev/null
+goto_workspace empty

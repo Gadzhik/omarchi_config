@@ -42,7 +42,7 @@ else
 fi
 
 info "Installing VS Code via Omarchy"
-command -v code >/dev/null || omarchy install vscode || warn "run 'omarchy install vscode' manually"
+command -v code >/dev/null || omarchy install editor vscode || warn "run 'omarchy install editor vscode' manually"
 
 # ---------------------------------------------------------------------------
 # 2. Node.js (via mise — matches ~/.config/mise/config.toml that we copy below)
@@ -61,14 +61,10 @@ info "Copying configuration files into \$HOME"
 cp -a "$DIR/home/." "$HOME/"
 chmod +x "$HOME"/.local/bin/* 2>/dev/null || true
 
-# bindings.conf sources bindings-personal.conf, which is not in the repo (it
-# names personal apps and accounts). Hyprland fails the whole config on a
-# missing source, so seed it from the template. Never overwrite an existing one.
-PERSONAL_BINDS="$HOME/.config/hypr/bindings-personal.conf"
-if [[ ! -f $PERSONAL_BINDS ]]; then
-  cp "$PERSONAL_BINDS.example" "$PERSONAL_BINDS"
-  info "Created bindings-personal.conf from the template — add your own app bindings there"
-fi
+# Omarchy 4 ships the personal app and webapp bindings (Signal, Obsidian,
+# Spotify, 1Password, the webapps) as defaults with the same targets, so there
+# is no bindings-personal file to seed any more. hypr/bindings.lua carries only
+# what upstream does not already bind.
 
 info "Making zsh the default login shell"
 if [[ ${SHELL:-} != */zsh ]] && command -v zsh >/dev/null; then
@@ -167,7 +163,8 @@ fi
 # 4. Default applications
 # ---------------------------------------------------------------------------
 info "Setting default apps (Firefox browser; VLC player via mimeapps.list)"
-xdg-settings set default-web-browser firefox.desktop 2>/dev/null || warn "set Firefox default manually"
+env -u BROWSER xdg-settings set default-web-browser firefox.desktop 2>/dev/null ||
+  warn "set Firefox default manually"
 
 # ---------------------------------------------------------------------------
 # 5. Services & groups
@@ -217,18 +214,21 @@ omarchy theme set "Tokyo Night" 2>/dev/null || true
 # folder is invisible to `omarchy theme bg next`.
 BG="$HOME/.config/omarchy/backgrounds/tokyo-night/vim-omarchy-neon.png"
 if [[ -f $BG ]]; then
-  ln -nsf "$BG" "$HOME/.config/omarchy/current/background"
-  pkill -x swaybg 2>/dev/null
-  setsid uwsm-app -- swaybg -i "$HOME/.config/omarchy/current/background" -m fill >/dev/null 2>&1 &
+  # Omarchy 4 owns the background: the shell paints it (swaybg is gone) and the
+  # current-theme symlinks live under ~/.local/state, so set it through the
+  # command instead of writing the link by hand.
+  omarchy theme bg set "$BG" 2>/dev/null || warn "could not set the wallpaper — run 'omarchy theme bg set $BG'"
 fi
 
 # ---------------------------------------------------------------------------
 # 7. Reload the desktop
 # ---------------------------------------------------------------------------
-info "Reloading Hyprland / waybar / elephant"
+info "Reloading Hyprland and the Omarchy shell"
 hyprctl reload 2>/dev/null || true
-omarchy restart waybar 2>/dev/null || true
-systemctl --user restart elephant.service 2>/dev/null || true
+hyprctl configerrors 2>/dev/null | grep -q . && warn "Hyprland reported config errors — run 'hyprctl configerrors'"
+# waybar, walker and elephant are gone in Omarchy 4; quickshell serves the bar,
+# the launcher and the clipboard manager as one process.
+omarchy restart shell 2>/dev/null || warn "omarchy restart shell"
 
 # ---------------------------------------------------------------------------
 # 8. Verify what actually landed
