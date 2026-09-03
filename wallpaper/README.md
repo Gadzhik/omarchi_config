@@ -53,8 +53,10 @@ The page is `overflow:hidden` at a fixed 1920×1200 and `section{break-inside:av
 so the Omarchy card's two flowed columns cannot spill — content that does not fit is
 silently **clipped**, not scrolled. Two budgets, both found the hard way:
 
-- **~78 rows** across the card's six sections. At 88 the last section fell off the
-  bottom edge.
+- **~87 rows** across the card's six sections — that is the observed ceiling, with
+  the right column ending a hair above the card edge. 88 rows overflowed back when
+  the media section was still present; the true limit is height, not row count, so
+  re-render and look before trusting either number.
 - **38 characters** for key + description on one row. `.row` is `white-space:nowrap`,
   so a longer row widens its column past the card and gets cut at the right edge.
 
