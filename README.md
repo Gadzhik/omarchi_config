@@ -88,7 +88,8 @@ instead of failing.
 
 ## What gets installed
 
-**Repo:** IntelliJ IDEA CE, PyCharm CE, JDK 21, Go, PostgreSQL, DBeaver, Ollama,
+**Repo:** IntelliJ IDEA CE, PyCharm CE, JDK 21, Go, PostgreSQL, DBeaver, Ollama
+(installed, service not enabled — see [Disabled services](#disabled-services)),
 VLC, ffmpeg, yt-dlp (+ aria2, atomicparsley, rtmpdump, python-mutagen/pycryptodomex/brotli/websockets),
 OpenVPN, Docker (+ compose), QEMU/KVM + libvirt + virt-manager (+ edk2-ovmf, swtpm).
 **AUR:** Postman, LM Studio, Slack, Android Studio, pgAdmin 4, ble.sh.
@@ -260,6 +261,45 @@ transition — `refresh-rate-by-power` calls `battery-idle apply` when the adapt
 **Suspend is gone.** The shell's idle service only blanks and locks; there is no
 suspend action, and logind's `IdleAction` is unset. The old 15-minute on-battery sleep
 went away with hypridle and has no replacement here yet.
+
+## Disabled services
+
+These ship enabled on Omarchy and are switched off on this machine. Measured
+2026-09-03: turning all three off produced **no power saving above the noise
+floor** (8.9-9.4 W either way on battery with the desktop idle). The CPU already
+sits in C10 ~92 % of the time, so idle daemons cost memory and process slots
+rather than watts. They are off because nothing here uses them, not to save power.
+
+| Service | What is lost while it is off |
+|---------|------------------------------|
+| `ollama` | The local LLM API on `:11434`. No models are pulled, and LM Studio uses its own engine, so nothing depended on it. |
+| `cups` | Printing, including the virtual PDF printer. |
+| `avahi-daemon` | mDNS: `*.local` names stop resolving and network printers/devices are no longer discovered. Ordinary DNS is unaffected — `mdns_minimal` in `/etc/nsswitch.conf` returns UNAVAIL and resolution continues down the chain. |
+
+Turn them back on:
+
+```bash
+sudo systemctl enable --now ollama.service
+sudo systemctl enable --now cups.service cups.socket cups.path
+sudo systemctl enable --now avahi-daemon.service avahi-daemon.socket
+```
+
+Or start one for this boot only, without re-enabling autostart:
+
+```bash
+sudo systemctl start ollama
+```
+
+**The sockets and the path unit matter.** `cups` and `avahi-daemon` are
+socket-activated: disabling only the `.service` leaves the socket armed, and the
+first client connection starts the daemon straight back up. Disable the whole set
+or the change does nothing.
+
+`install.sh` reflects this only for ollama, which it installs without enabling.
+It does **not** disable cups or avahi on a fresh machine — that is a system-wide
+change with no way to notice it went wrong until something fails to print, so it
+is left as a deliberate manual step rather than something a deploy script does
+behind your back.
 
 ## Notes
 

@@ -172,7 +172,9 @@ env -u BROWSER xdg-settings set default-web-browser firefox.desktop 2>/dev/null 
 info "Enabling services and adding groups"
 sudo systemctl enable --now docker.socket 2>/dev/null || warn "docker"
 sudo systemctl enable --now libvirtd      2>/dev/null || warn "libvirtd"
-sudo systemctl enable --now ollama        2>/dev/null || warn "ollama"
+# ollama is installed but deliberately NOT enabled: it holds memory for a
+# service with no model pulled, and nothing here talks to it. Start it when you
+# actually want the API:  sudo systemctl start ollama
 # intel_lpmd ships enabled on Omarchy; enable if present
 systemctl is-enabled intel_lpmd &>/dev/null || sudo systemctl enable --now intel_lpmd 2>/dev/null || true
 sudo usermod -aG docker,libvirt,kvm "$USER" 2>/dev/null || true

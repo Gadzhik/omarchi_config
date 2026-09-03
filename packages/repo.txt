@@ -19,7 +19,7 @@ postgresql
 dbeaver
 
 # --- AI / local LLM ---
-ollama
+ollama               # installed, but install.sh does not enable the service
 
 # --- File manager: Thunar (default, replaces Nautilus) + plugins ---
 thunar
