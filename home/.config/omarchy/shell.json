@@ -8,7 +8,7 @@
         },
         {
           "id": "local.clock-seconds",
-          "format": "dddd HH:mm:ss",
+          "format": "dddd, d MMM HH:mm:ss",
           "formatAlt": "d MMMM 'W'ww yyyy",
           "verticalFormat": "HH\n—\nmm"
         },
@@ -47,7 +47,8 @@
           "id": "omarchy.monitor"
         },
         {
-          "id": "omarchy.power"
+          "id": "omarchy.power",
+          "showPercentage": true
         }
       ]
     },
