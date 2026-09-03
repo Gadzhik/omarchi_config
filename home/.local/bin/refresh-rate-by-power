@@ -10,7 +10,7 @@ SCALE=1.6
 AC=/sys/class/power_supply/ADP1/online
 AC_RATE=165
 BAT_RATE=60
-BAT_BRIGHTNESS=40    # percent while on battery
+BAT_BRIGHTNESS=15    # percent while on battery
 
 STATE_FILE="${XDG_RUNTIME_DIR:-/tmp}/power-mode.state"
 SAVED_BRIGHTNESS="${XDG_RUNTIME_DIR:-/tmp}/power-mode.brightness"

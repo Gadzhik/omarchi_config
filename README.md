@@ -133,8 +133,11 @@ pacman -Qqm   # everything foreign / from the AUR
 
 ### Custom helper scripts (`home/.local/bin/`)
 
-- **`refresh-rate-by-power`** — on battery: 60 Hz + `power-saver` + dim brightness (saves/restores);
-  on AC: 165 Hz + `balanced` + restore. Reacts to power udev events.
+- **`refresh-rate-by-power`** — on battery: 60 Hz + `power-saver` + brightness down to **15 %**
+  (the pre-dim value is saved and restored); on AC: 165 Hz + `balanced` + restore. Reacts to power
+  udev events, and calls `battery-idle apply` on each one. Backlight is the largest controllable
+  draw on this panel — measured 2026-09-03 on battery with the desktop idle: 8.42 W at 5 %,
+  **8.88 W at 15 %**, 10.15 W at 40 %, 11.80 W at 70 %.
 - **`per-window-layout`** — remembers the keyboard layout **per window** (Hyprland has no native
   per-window layout) via the Hyprland IPC socket. Two quirks it works around: Hyprland emits **no
   `activewindowv2` for layer surfaces**, so the launcher (`SUPER+SPACE`, `SUPER+ALT+SPACE`) used to
