@@ -295,11 +295,23 @@ socket-activated: disabling only the `.service` leaves the socket armed, and the
 first client connection starts the daemon straight back up. Disable the whole set
 or the change does nothing.
 
-`install.sh` reflects this only for ollama, which it installs without enabling.
-It does **not** disable cups or avahi on a fresh machine — that is a system-wide
-change with no way to notice it went wrong until something fails to print, so it
-is left as a deliberate manual step rather than something a deploy script does
-behind your back.
+`install.sh` installs ollama without enabling it, and can switch off the other
+two — but only when asked:
+
+| variable | effect |
+|----------|--------|
+| *(none)* | cups and avahi are left enabled, as Omarchy ships them |
+| `DISABLE_CUPS_AVAHI=1` | disables both, sockets and `cups.path` included |
+
+```bash
+DISABLE_CUPS_AVAHI=1 ./install.sh
+```
+
+Opt-in rather than default on purpose: killing printing and mDNS is a system-wide
+change that announces itself months later, when something fails to print and
+nobody remembers a deploy script did it. `verify.sh` reports the current state of
+both as a note either way, so a fresh machine is never silently different from
+this one without saying so.
 
 ## Notes
 

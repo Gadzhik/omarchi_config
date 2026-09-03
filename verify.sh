@@ -164,6 +164,17 @@ head_ "Services and groups"
 for u in docker.socket libvirtd; do
   systemctl is-enabled "$u" &>/dev/null && ok "$u enabled" || note "$u not enabled"
 done
+# Reported as notes, not failures: whether these should be off is a per-machine
+# choice (install.sh only touches them under DISABLE_CUPS_AVAHI=1), but a fresh
+# install differing from this one should still be visible rather than silent.
+for u in cups.service avahi-daemon.service ollama.service; do
+  if [[ "$(systemctl is-enabled "$u" 2>/dev/null)" == enabled ]]; then
+    note "$u enabled (disabled on the reference machine)"
+  else
+    ok "$u not enabled"
+  fi
+done
+
 for g in docker libvirt kvm; do
   id -nG 2>/dev/null | tr ' ' '\n' | grep -qx "$g" && ok "member of $g" ||
     note "not in group $g yet — log out and back in"

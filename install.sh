@@ -177,6 +177,21 @@ sudo systemctl enable --now libvirtd      2>/dev/null || warn "libvirtd"
 # actually want the API:  sudo systemctl start ollama
 # intel_lpmd ships enabled on Omarchy; enable if present
 systemctl is-enabled intel_lpmd &>/dev/null || sudo systemctl enable --now intel_lpmd 2>/dev/null || true
+
+# cups and avahi ship enabled on Omarchy and are switched off on this machine.
+# Opt-in rather than default: a deploy script that silently kills printing and
+# mDNS gives you nothing to notice until something fails to print months later.
+# Both are socket-activated, so the .socket (and cups.path) have to go too —
+# disabling only the .service leaves the socket armed and the first client
+# connection starts the daemon straight back up.
+if [[ ${DISABLE_CUPS_AVAHI:-0} == 1 ]]; then
+  info "Disabling printing (cups) and mDNS (avahi) — DISABLE_CUPS_AVAHI=1"
+  sudo systemctl disable --now cups.service cups.socket cups.path 2>/dev/null || warn "cups"
+  sudo systemctl disable --now avahi-daemon.service avahi-daemon.socket 2>/dev/null || warn "avahi-daemon"
+else
+  info "Leaving cups and avahi enabled (set DISABLE_CUPS_AVAHI=1 to switch them off)"
+fi
+
 sudo usermod -aG docker,libvirt,kvm "$USER" 2>/dev/null || true
 getent group wireshark >/dev/null && sudo usermod -aG wireshark "$USER" 2>/dev/null || true  # non-root packet capture
 
