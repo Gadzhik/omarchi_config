@@ -30,3 +30,6 @@ export PATH="$PATH:$HOME/.lmstudio/bin"
 
 # --- Тулчейн разработки (Rust/Java/Android) ---
 [ -r ~/.config/devtools.env.sh ] && . ~/.config/devtools.env.sh
+
+# Added by LM Studio CLI tool (lms)
+export PATH="$PATH:/home/igadzhi/.lmstudio/bin"

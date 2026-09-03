@@ -6,6 +6,14 @@ HISTSIZE=32768
 SAVEHIST=32768
 setopt hist_ignore_all_dups hist_ignore_space share_history inc_append_history
 
+# --- Aliases ---
+alias ll='ls -lah'
+alias gs='git status'
+alias gd='git diff'
+alias dc='docker compose'
+alias k='kubectl'
+alias tf='terraform'
+
 # --- Completion (case-insensitive, menu select) ---
 autoload -Uz compinit && compinit -u
 zstyle ':completion:*' menu select
@@ -61,3 +69,6 @@ export PATH="$PATH:$HOME/.lmstudio/bin"
 
 # --- Тулчейн разработки (Rust/Java/Android) ---
 [ -r ~/.config/devtools.env.sh ] && . ~/.config/devtools.env.sh
+
+# Added by LM Studio CLI tool (lms)
+export PATH="$PATH:/home/igadzhi/.lmstudio/bin"

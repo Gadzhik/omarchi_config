@@ -1,4 +1,3 @@
-
 [Default Applications]
 text/plain=nvim.desktop
 text/english=nvim.desktop
@@ -59,3 +58,8 @@ audio/opus=vlc.desktop
 audio/x-flac=vlc.desktop
 audio/x-vorbis+ogg=vlc.desktop
 application/x-gnome-saved-search=thunar.desktop
+application/zip=xarchiver.desktop
+x-scheme-handler/claude=com.anthropic.Claude.desktop
+
+[Added Associations]
+application/zip=xarchiver.desktop;
