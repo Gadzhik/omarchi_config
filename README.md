@@ -115,7 +115,7 @@ pacman -Qqm   # everything foreign / from the AUR
 | `hypr/looknfeel.lua` | Window gaps → **1px**, keep the 2px active border (red→pink gradient); **VRR = 2** (adaptive sync in fullscreen); float/center/pin rules for the `battery-warning` window |
 | `hypr/monitors.lua` | Display scale **1.6** (`GDK_SCALE=1.75`) — panel allows only clean 1.6/2.0 |
 | `hypr/input.lua` | Layout `us,ru`; switch key **Alt+Shift** (`grp:alt_shift_toggle`, was Ctrl+Shift); `resolve_binds_by_sym = false` so `SUPER+<letter>` resolves by key **position** and keeps working in the ru layout (the Latin layout must stay first); touchpad `sensitivity = 0.55` and the Pebble mouse `scroll_factor` via `hl.device`, so each device is tuned without moving the system default |
-| `hypr/bindings.lua` | Only what Omarchy 4 does not already bind: **Thunar** over the nautilus default and **Typora** over Omawrite (both `hl.unbind` first, since Hyprland keeps both bindings otherwise); **SUPER+D** show-desktop; **SUPER+SHIFT+I** battery-idle; **SUPER+ALT+R** screen record (add SHIFT for desktop audio); **SUPER+ALT+BACKSPACE** peek through the focused window while held, restored on `{ release = true }`. Every app and webapp binding that used to live here is now an upstream default with the same target |
+| `hypr/bindings.lua` | Only what Omarchy 4 does not already bind: **Thunar** over the nautilus default and **Typora** over Omawrite (both `hl.unbind` first, since Hyprland keeps both bindings otherwise); **SUPER+D** show-desktop; **SUPER+SHIFT+I** battery-idle; **SUPER+ALT+R** screen record (add SHIFT for desktop audio); **SUPER+ALT+BACKSPACE** peek through the focused window while held, restored on `{ release = true }`. Every app and webapp binding that used to live here is now an upstream default with the same target. Also re-declares Omarchy 4's universal clipboard (**SUPER+C/V/X**) passing `code:54/55/53` instead of the key *name*: upstream sends `key = "C"`, which Hyprland resolves against the **active** xkb group, so under `ru` — where no latin C exists — it dies with `send_key_state: key not found` (see `docs/keyboard-layout-shortcuts.md`) |
 | `hypr/autostart.lua` | Launches `refresh-rate-by-power`, `per-window-layout` and `battery-low-warn` through `o.launch_on_start` (uwsm-wrapped), and resets `battery-idle` on login |
 | `alacritty/alacritty.toml` | Font size **14**; **58 Cyrillic key bindings** so `Ctrl+<letter>` / `Alt+<letter>` keep working in the ru layout — Alacritty matches bindings by the *character* the layout produces, and `Ctrl+ф` yields no control code at all (see `docs/keyboard-layout-shortcuts.md`) |
 | `xdg-terminals.list` | Names `Alacritty.desktop` so `xdg-terminal-exec` (what `SUPER+RETURN` runs) opens Alacritty. Without it Omarchy 4 falls back to **foot**, where none of the Cyrillic bindings exist — the ru layout silently loses `Ctrl+A`, `Ctrl+R` and friends |
@@ -189,9 +189,10 @@ Things that are configured *inside* an application rather than in a dotfile, so
   Why the fans never spun (the `bitland_mifs_wmi` driver, new in kernel 7.1),
   the blacklist that fixes it, the resulting +25 % sustained clock, the PL1
   safety interlock, and the dead ends not worth re-investigating.
-- **`docs/keyboard-layout-shortcuts.md`** — the two independent layers that make
-  shortcuts survive the ru layout: `resolve_binds_by_sym` for Hyprland and 62
-  explicit Cyrillic bindings for Alacritty.
+- **`docs/keyboard-layout-shortcuts.md`** — the three independent layers that make
+  shortcuts survive the ru layout: `resolve_binds_by_sym` for Hyprland, 62
+  explicit Cyrillic bindings for Alacritty, and keycodes instead of key names
+  wherever a binding *synthesises* a keystroke.
 
 ## Hardware-specific values ⚠️
 

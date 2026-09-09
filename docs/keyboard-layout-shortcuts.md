@@ -2,12 +2,12 @@
 
 **Настроено 2026-07-29.** Раскладки `us,ru`, переключение Alt+Shift.
 
-Проблема одна и та же на двух уровнях, но решается по-разному: оконный менеджер и
-терминал сопоставляют сочетания с клавишами независимо друг от друга.
+Проблема одна и та же на трёх уровнях, но решается по-разному: оконный менеджер,
+терминал и синтез клавиш сопоставляют сочетания с клавишами независимо друг от друга.
 
 ---
 
-## Уровень 1 — Hyprland (`home/.config/hypr/input.conf`)
+## Уровень 1 — Hyprland (`home/.config/hypr/input.lua`)
 
 ```ini
 resolve_binds_by_sym = false
@@ -82,6 +82,72 @@ python3 -c "import tomllib; d=tomllib.load(open('$HOME/.config/alacritty/alacrit
 
 Применяется живой перезагрузкой (`live_config_reload` включён по умолчанию):
 `omarchy restart terminal` — просто трогает файл, сессии не убивает.
+
+---
+
+## Уровень 3 — синтез клавиш (`home/.config/hypr/bindings.lua`)
+
+**Найдено 2026-09-09 на Omarchy 4.0.3.**
+
+Уровни 1 и 2 — про то, как сочетание **распознаётся**. Этот — про то, как клавиша
+**отправляется**, и `resolve_binds_by_sym` здесь не помогает вообще.
+
+### Почему ломалось
+
+Omarchy 4 добавил «универсальный» буфер обмена: `SUPER+C` / `SUPER+V` / `SUPER+X`
+шлют в сфокусированное окно `Ctrl+C` / `Ctrl+V` / `Ctrl+X`, а в терминале —
+`Ctrl+Insert` / `Shift+Insert`. Клавиша передаётся **по имени**:
+
+```lua
+-- /usr/share/omarchy/default/hypr/bindings/clipboard.lua
+hl.dispatch(hl.dsp.send_key_state({ mods = "CTRL", key = "C", state = "down" }))
+```
+
+Hyprland ищет это имя в **активной** группе раскладки. В русской латинской `C` нет:
+
+```
+key <AB03> {  symbols[1] = [ c, C ]   symbols[2] = [ Cyrillic_es, Cyrillic_ES ]  };
+key <AB04> {  symbols[1] = [ v, V ]   symbols[2] = [ Cyrillic_em, Cyrillic_EM ]  };
+```
+
+Итог — не «другое действие», а падение с оверлеем Hyprland в правом верхнем углу:
+
+```
+Runtime error in lua:
+=[C]:-1: send_key_state: key not found
+```
+
+Сам бинд при этом распознаётся правильно — ломается только то, что он делает внутри.
+
+### Решение
+
+Те же три бинда переопределены в `bindings.lua` (с `hl.unbind` перед каждым), но
+клавиша передаётся **кодом**, а он у физической клавиши один во всех раскладках:
+
+| клавиша | X11-код | xkb-алиас |
+|---|---|---|
+| `x` | 53 | `<LatX>` |
+| `c` | 54 | `<LatC>` |
+| `v` | 55 | `<LatV>` |
+
+```lua
+o.bind("SUPER + C", "Universal copy", universal_clipboard_shortcut("CTRL", "code:54", "CTRL", "Insert"))
+```
+
+`Insert` оставлен именем — он есть в обеих группах, ломать нечего.
+
+Проверено под `ru` и `us`. Здесь `code:` сработал, в отличие от Alacritty (уровень 2),
+где от scancode отказались из-за неоднозначной нумерации: у Hyprland она документирована
+как X11-код, и его видно прямо в `xkbcli compile-keymap`.
+
+### Как воспроизвести диагноз
+
+```bash
+xkbcli compile-keymap --layout "us,ru" --options "grp:alt_shift_toggle" | grep -A3 "key <AB03>"
+```
+
+Ошибка нигде не логируется — ни в `hyprland.log`, ни в `journalctl`, ни в
+`hyprctl rollinglog`. Живёт только в оверлее на экране.
 
 ---
 
