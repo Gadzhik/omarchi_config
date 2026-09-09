@@ -120,13 +120,14 @@ pacman -Qqm   # everything foreign / from the AUR
 | `alacritty/alacritty.toml` | Font size **14**; **58 Cyrillic key bindings** so `Ctrl+<letter>` / `Alt+<letter>` keep working in the ru layout — Alacritty matches bindings by the *character* the layout produces, and `Ctrl+ф` yields no control code at all (see `docs/keyboard-layout-shortcuts.md`) |
 | `xdg-terminals.list` | Names `Alacritty.desktop` so `xdg-terminal-exec` (what `SUPER+RETURN` runs) opens Alacritty. Without it Omarchy 4 falls back to **foot**, where none of the Cyrillic bindings exist — the ru layout silently loses `Ctrl+A`, `Ctrl+R` and friends |
 | `foot/foot.ini` | Font size 14, so the fallback terminal is not unusable if it ever opens |
-| `mimeapps.list` | **VLC** default video/audio player; **Firefox** default browser |
+| `mimeapps.list` | **VLC** default video/audio player; **Firefox** default browser; `x-scheme-handler/zcode` so ZCode's deep links open the editor |
 | `omarchy/shell.json` | Bar layout: **weather widget removed**; the clock is `local.clock-seconds` (below) rather than stock `omarchy.clock`, formatted `dddd, d MMM HH:mm:ss` so the date sits next to the time; `omarchy.power` carries `showPercentage` so the battery reads as a number, not just an icon. `idle.screensaver` / `idle.lock` are the successors to hypridle's timers |
 | `omarchy/plugins/local.clock-seconds/` | Clock widget forked to tick every second. Stock `omarchy.clock` hardcodes `precision: SystemClock.Minutes`, so an `HH:mm:ss` format renders seconds that only move once a minute. Only `BarWidget.qml` is forked — `Panel.qml` (the calendar) and `Model.js` load by absolute path out of `/usr/share/omarchy`, so they keep tracking upstream |
-| `.bashrc` | **fzf** (Ctrl+R/Ctrl+T/`**`) + **ble.sh** (fish/zsh-like autosuggestions) |
+| `.bashrc` | **fzf** (Ctrl+R/Ctrl+T/`**`) + **ble.sh** (fish/zsh-like autosuggestions); sources `~/.local/bin/env` |
+| `.local/bin/env` | PATH shim written by **uv**'s standalone installer, sourced from both `.bashrc` and `.zshrc`. Mirrored because those two would otherwise source a file that does not exist on a fresh install — uv lives in `~/.local/bin` and is owned by no package |
 | `.zshrc` | **zsh** as login shell + zsh-autosuggestions + syntax-highlighting + starship/mise/fzf/zoxide + Omarchy aliases. Forces **`bindkey -e`** before the plugins load: with no explicit keymap zsh picks one from `$VISUAL`/`$EDITOR`, and `EDITOR=nvim` contains `vi`, so it silently lands in vi mode where `^?` is `vi-backward-delete-char` and backspace refuses to erase anything that entered the buffer before insert mode — most visibly pasted text. Also binds **Home/End/Delete/Ctrl+←→**, which zsh leaves as `undefined-key` out of the box |
 | `alacritty/alacritty.toml` | Also forces `zsh` as the terminal shell (`[terminal.shell]`) |
-| `.config/mise/config.toml` | Node.js version pin |
+| `.config/mise/config.toml` | Node.js version pin; `gh` on `latest`; `settings.upgrade.auto_prune = false` so an upgrade leaves older installed versions in place |
 | `.minikube/config/config.json` | minikube defaults: **docker** driver, 4 CPU, 8 GB |
 | `.minikube/files/etc/resolv.conf` | DNS for the cluster node — see the note below |
 | `.config/omarchy/backgrounds/tokyo-night/vim-omarchy-neon.png` | Active wallpaper: neon Vim / LazyVim / Omarchy cheat sheet (3072×1920, source in `wallpaper/`) |

@@ -42,3 +42,5 @@ export PATH="$PATH:$HOME/.lmstudio/bin"
 
 # Added by LM Studio CLI tool (lms)
 export PATH="$PATH:/home/igadzhi/.lmstudio/bin"
+
+. "$HOME/.local/share/../bin/env"
