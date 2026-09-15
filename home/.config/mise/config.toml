@@ -6,4 +6,4 @@ node = "26.5.0"
 pnpm = "10"
 
 [settings.upgrade]
-auto_prune = false
+auto_prune = true
