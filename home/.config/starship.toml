@@ -1,31 +1,25 @@
-# Промпт. Отличается от дефолта Omarchy тем, что цвет здесь несёт смысл, а не
-# украшает: в стоковом конфиге directory, git_branch, git_status и character
-# все покрашены в cyan, и на яркой палитре строка сливается в одно пятно.
+# Промпт в стиле powerline: каждый модуль — цветной сегмент со стрелкой.
+# Предыдущая версия (цвет текстом, без плашек) лежит в starship.toml.bak.1791788934.
 #
-# Роли цветов:
-#   purple      — имя репозитория (единственное, что нужно найти глазами сразу)
-#   white       — путь внутри репозитория, подчинённая информация
-#   red         — ветка (#ff4f9a), и больше ничего
-#   bright-red  — всё плохое: ✗, код возврата, конфликты, удалённые файлы,
-#                 отставание от origin, read-only каталог (#ff7ab8)
-#   yellow      — незакоммиченные изменения, это предупреждение
-#   green       — чисто / застейджено / команда прошла
-#   cyan        — docker/k8s контекст
-#   красный hex — пара user@host под root или по SSH, в тон обводке активного
-#                 окна (единственное место, где цвет задан hex, а не именем
-#                 ANSI — см. [username])
-#   bright-blue — версии языков и рантаймов
-#   purple      — часы в правом промпте
+# Роли цветов сохранены, только теперь это цвет фона сегмента:
+#   bright-purple — каталог, имя репозитория жирным
+#   blue          — ветка
+#   yellow        — незакоммиченные изменения и расхождение с origin
+#   bright-red    — код возврата упавшей команды, read-only каталог
+#   cyan          — рантаймы, docker, kubernetes
+#   bright-black  — фоновые задачи, часы справа
+#   #ff4f9a       — user@host, только под root или по SSH, в тон обводке окна
 #
-# Приглушённых (dimmed) стилей здесь нет сознательно: на этой палитре они
-# выглядят грязно-серыми и выпадают из общего вида.
+# Цвета заданы именами ANSI, а не hex, чтобы промпт следовал теме терминала.
+# Исключения: user@host (обводка окна) и фон батареи (#292e42, в ANSI нет
+# промежуточного серого между фоном и bright-black).
 #
-# Ветка занимает обычный красный, поэтому сигналы об ошибке разведены в bright:
-# иначе розовое имя ветки в каждой строке замыливало бы ✗ упавшей команды.
-#
-# Модули языков, docker и kubernetes starship показывает КОНТЕКСТНО — только
-# когда в каталоге есть соответствующие файлы. В обычном каталоге промпт
-# остаётся коротким, длинным он становится там, где это что-то значит.
+# Как устроены стыки. Сегменты контекстные (git пропадает вне репозитория,
+# рантаймы — вне проектов), поэтому сосед справа заранее неизвестен. Каждый
+# сегмент сам открывается «выемкой» (стрелка цвета фона терминала на своём
+# фоне) и закрывается стрелкой своего цвета на пустом фоне. Отсюда шеврон
+# с тонким зазором, который не ломается, когда какой-то модуль пропал.
+# Глифы  и  — Powerline из Nerd Font (JetBrainsMono Nerd Font).
 
 add_newline = true
 
@@ -42,103 +36,98 @@ $character"""
 right_format = "$battery$time"
 
 [character]
-# В стоке оба символа были bold cyan, то есть код возврата никак не читался.
-success_symbol = "[❯](bold green)"
-error_symbol = "[✗](bold bright-red)"
+# Стрелка второй строки: фиолетовая — всё хорошо, красная — команда упала.
+success_symbol = "[❯](bold bright-purple)"
+error_symbol = "[❯](bold bright-red)"
 
 # --- Где я -----------------------------------------------------------------
 
 [username]
-# Видно всегда, а не только под root/по SSH: без этого промпт в обычном каталоге
-# схлопывался до одного «~». Под root цвет меняется на bright-red — это как раз
-# тот случай, когда перепутать сессию дорого.
-format = "[$user]($style)"
-# Поведение по умолчанию: в обычной локальной сессии не показывается вообще.
 # Всплывает только под root или по SSH — ровно тогда, когда перепутать сессию
-# дорого. Цвета оставлены в тон обводке активного окна в Hyprland
-# (rgba(ff1744) -> rgba(ff4f9a), см. ~/.config/hypr/looknfeel.conf).
-style_user = "bold #ff1744"
-style_root = "bold bright-red"
+# дорого. Под root имя пользователя и так говорит само за себя.
 show_always = false
+format = "[ $user ]($style)[](fg:#ff4f9a)"
+style_user = "bold fg:black bg:#ff4f9a"
+style_root = "bold fg:black bg:#ff4f9a"
 
 [hostname]
 ssh_only = true
-format = "[@](#9a92c4)[$hostname]($style) "
-style = "bold #ff7ab8"
+format = "[](fg:black bg:#ff4f9a)[ @$hostname ]($style)[](fg:#ff4f9a)"
+style = "bold fg:black bg:#ff4f9a"
 
 [directory]
 truncation_length = 2
 truncation_symbol = "…/"
-style = "white"
-repo_root_style = "bold purple"
-repo_root_format = "[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) "
-read_only = " "
-read_only_style = "bright-red"
+style = "fg:black bg:bright-purple"
+repo_root_style = "bold fg:black bg:bright-purple"
+read_only = " "
+read_only_style = "bold fg:red bg:bright-purple"
+format = "[  $path]($style)[$read_only]($read_only_style)[ ](bg:bright-purple)[](fg:bright-purple)"
+repo_root_format = "[  ]($style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style)[ ](bg:bright-purple)[](fg:bright-purple)"
 
 # --- Git -------------------------------------------------------------------
 
 [git_branch]
-format = "[$branch]($style) "
-# ANSI red в палитре Synthwave Neon это ровно #ff4f9a. Задано именем, а не hex,
-# чтобы промпт не отвязался от темы терминала — см. шапку файла.
-style = "italic red"
+symbol = " "
+format = "[](fg:black bg:blue)[ $symbol$branch ]($style)[](fg:blue)"
+style = "fg:black bg:blue"
 
 [git_status]
-# $ahead_behind добавлен осознанно: в дефолте его не было, поэтому ahead/behind/
-# diverged были описаны, но не рисовались никогда — расхождение с origin
-# оставалось невидимым.
-format     = '[$all_status$ahead_behind]($style)'
-style      = "yellow"
-ahead      = "[⇡${count}](green) "
-diverged   = "[⇕⇡${ahead_count}⇣${behind_count}](bold yellow) "
-behind     = "[⇣${count}](bright-red) "
-conflicted = "[ ](bold bright-red)"
-up_to_date = "[ ](green)"
-untracked  = "? "
-modified   = " "
-stashed    = "[](purple)"
-staged     = "[](green)"
-renamed    = ""
-deleted    = "[ ](bright-red)"
+# Внутри жёлтой плашки вложенные цвета не читаются, поэтому все счётчики
+# одного цвета и различаются символом. Чистый репозиторий — сегмента нет.
+# $ahead_behind добавлен осознанно: без него расхождение с origin невидимо.
+format     = '([](fg:black bg:yellow)[ $all_status$ahead_behind ]($style)[](fg:yellow))'
+style      = "fg:black bg:yellow"
+ahead      = "⇡${count}"
+behind     = "⇣${count}"
+diverged   = "⇕⇡${ahead_count}⇣${behind_count}"
+conflicted = "=${count} "
+untracked  = "?${count} "
+modified   = "!${count} "
+staged     = "+${count} "
+stashed    = "≡${count} "
+renamed    = "»${count} "
+deleted    = "✘${count} "
+up_to_date = ""
 
 # --- Рантаймы: показываются только в каталогах соответствующих проектов ------
 
 [nodejs]
-format = "[$symbol($version )]($style)"
-symbol = " "
-style = "bright-blue"
+symbol = " "
+format = "[](fg:black bg:cyan)[ $symbol($version) ]($style)[](fg:cyan)"
+style = "fg:black bg:cyan"
 
 [golang]
-format = "[$symbol($version )]($style)"
-symbol = " "
-style = "bright-blue"
+symbol = " "
+format = "[](fg:black bg:cyan)[ $symbol($version) ]($style)[](fg:cyan)"
+style = "fg:black bg:cyan"
 
 [java]
-format = "[$symbol($version )]($style)"
-symbol = " "
-style = "bright-blue"
+symbol = " "
+format = "[](fg:black bg:cyan)[ $symbol($version) ]($style)[](fg:cyan)"
+style = "fg:black bg:cyan"
 
 [python]
 # Виртуальное окружение важнее версии: перепутанный venv это типовая потеря часа.
-format = '[$symbol$pyenv_prefix($version )(\($virtualenv\) )]($style)'
-symbol = " "
-style = "bright-blue"
+symbol = " "
+format = '[](fg:black bg:cyan)[ $symbol$pyenv_prefix($version )(\($virtualenv\) )]($style)[](fg:cyan)'
+style = "fg:black bg:cyan"
 
 # --- Инфраструктура ---------------------------------------------------------
 
 [docker_context]
 # only_with_files по умолчанию true: не мозолит глаза вне docker-проектов.
-format = "[$symbol$context]($style) "
-symbol = " "
-style = "cyan"
+symbol = " "
+format = "[](fg:black bg:cyan)[ $symbol$context ]($style)[](fg:cyan)"
+style = "fg:black bg:cyan"
 
 [kubernetes]
 # Модуль выключен в starship по умолчанию. Включён, но ограничен каталогами
 # k8s-проектов — иначе контекст висел бы в каждой строке, включая ~.
 disabled = false
-format = '[$symbol$context( \($namespace\))]($style) '
 symbol = "☸ "
-style = "cyan"
+format = '[](fg:black bg:cyan)[ $symbol$context( \($namespace\)) ]($style)[](fg:cyan)'
+style = "fg:black bg:cyan"
 detect_files = ["k8s.yaml", "skaffold.yaml", "Chart.yaml", "kustomization.yaml"]
 detect_folders = ["k8s", "kubernetes", "helm", ".helm", "manifests"]
 
@@ -146,53 +135,52 @@ detect_folders = ["k8s", "kubernetes", "helm", ".helm", "manifests"]
 
 [jobs]
 # Сколько задач висит в фоне. Легко забыть про Ctrl+Z и потом гадать.
-format = "[$symbol$number]($style) "
 symbol = "⇶ "
-style = "cyan"
 number_threshold = 1
 symbol_threshold = 1
+format = "[](fg:black bg:bright-black)[ $symbol$number ]($style)[](fg:bright-black)"
+style = "fg:bright-white bg:bright-black"
 
 [status]
-# Символ ✗ показывает сам факт падения, а этот модуль — код. 130 (Ctrl+C) и
-# 137 (OOM-kill) читаются мгновенно, если код виден.
+# Код виден целиком: 130 (Ctrl+C) и 137 (OOM-kill) читаются мгновенно.
 disabled = false
-format = '[$status]($style) '
-style = "bold bright-red"
 map_symbol = false
 pipestatus = true
-pipestatus_format = '[$pipestatus]($style) '
+format = '[](fg:black bg:bright-red)[ ✗ $status ]($style)[](fg:bright-red)'
+pipestatus_format = '[](fg:black bg:bright-red)[ ✗ $pipestatus ]($style)[](fg:bright-red)'
+style = "bold fg:black bg:bright-red"
 
 [cmd_duration]
 # Меньше двух секунд не показывать — иначе цифра мелькает после каждой команды.
 min_time = 2000
-format = "[ $duration]($style)"
-style = "bright-blue"
+format = "[](fg:bright-blue)[  $duration ](fg:black bg:bright-blue)"
+
+# --- Правая лента: стрелки смотрят влево ------------------------------------
 
 [battery]
-# Ноутбук, и вопрос автономности здесь живой — заряд видно всегда, а не только
-# на последних процентах. Порядок блоков display важен: starship берёт первый,
-# чей threshold не меньше текущего заряда.
-format = "[ $symbol$percentage]($style)"
-full_symbol = ""
-charging_symbol = ""
-discharging_symbol = ""
-unknown_symbol = ""
-empty_symbol = ""
+# Ноутбук, и вопрос автономности здесь живой — заряд видно всегда. Порядок
+# блоков display важен: starship берёт первый, чей threshold не меньше заряда.
+format = "[](fg:#292e42)[ $symbol$percentage ]($style)"
+full_symbol = " "
+charging_symbol = " "
+discharging_symbol = " "
+unknown_symbol = " "
+empty_symbol = " "
 
 [[battery.display]]
 threshold = 15
-style = "bold bright-red"
+style = "bold fg:bright-red bg:#292e42"
 
 [[battery.display]]
 threshold = 30
-style = "yellow"
+style = "fg:yellow bg:#292e42"
 
 [[battery.display]]
 threshold = 100
-style = "green"
+style = "fg:green bg:#292e42"
 
 [time]
 disabled = false
-format = "[ $time]($style)"
+format = "[](fg:bright-black bg:#292e42)[  $time ]($style)"
 time_format = "%d.%m.%Y %H:%M:%S"
-style = "purple"
+style = "fg:bright-white bg:bright-black"
