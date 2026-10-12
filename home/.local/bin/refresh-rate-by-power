@@ -22,6 +22,59 @@ AC_BRIGHTNESS_FALLBACK=40
 
 on_ac() { [[ "$(cat "$AC" 2>/dev/null)" == "1" ]]; }
 
+# Battery-runtime log, read back with `journalctl --user -t power-mode`.
+# UPower keeps only about a week of history; the journal keeps months.
+# A session opens when the machine goes on battery and is summarised when AC
+# returns. It lives in XDG_STATE_HOME so a battery stretch survives a reboot.
+# Duration is wall-clock time, so suspend inside a session is counted too.
+BAT=/sys/class/power_supply/BAT0
+SESSION="${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/power-mode.session"
+
+log() { logger -t power-mode -- "$*"; }
+
+bat_energy() { cat "$BAT/energy_now" 2>/dev/null; }    # µWh
+bat_pct() { cat "$BAT/capacity" 2>/dev/null; }
+
+session_open() {
+  local t e p
+  t=$(date +%s) e=$(bat_energy) p=$(bat_pct)
+  # A session left open by a shutdown on battery carries on after the reboot,
+  # unless the battery gained charge meanwhile (charged while off).
+  if [[ -s $SESSION ]]; then
+    local _ e0 _
+    read -r _ e0 _ <"$SESSION"
+    if [[ -n $e && -n $e0 ]] && (( e <= e0 )); then
+      log "battery: ${p}% (session from before reboot continues)"
+      return
+    fi
+  fi
+  mkdir -p "$(dirname "$SESSION")"
+  echo "$t $e $p" >"$SESSION"
+  log "battery: ${p}%, $(awk -v e="$e" 'BEGIN { printf "%.1f", e / 1e6 }') Wh"
+}
+
+session_close() {
+  local t e p
+  t=$(date +%s) e=$(bat_energy) p=$(bat_pct)
+  if [[ ! -s $SESSION ]]; then
+    log "ac: ${p}%"
+    return
+  fi
+  local t0 e0 p0
+  read -r t0 e0 p0 <"$SESSION"
+  rm -f "$SESSION"
+  if [[ -z $e || -z $e0 ]] || (( e > e0 )); then
+    # Charged while powered off: the energy delta means nothing.
+    log "ac: ${p}% (battery session since $(date -d "@$t0" '+%F %R'), consumption unknown)"
+    return
+  fi
+  log "$(awk -v dt=$((t - t0)) -v de=$((e0 - e)) -v p0="$p0" -v p="$p" 'BEGIN {
+    h = dt / 3600; wh = de / 1e6
+    printf "ac: on battery %.2f h, %d%% -> %d%%, used %.1f Wh, avg %.1f W",
+      h, p0, p, wh, (h > 0 ? wh / h : 0)
+  }')"
+}
+
 # Hyprland 0.56 refuses `hyprctl keyword` under a Lua config ("keyword can't
 # work with non-legacy parsers. Use eval."), so the monitor mode is now set by
 # evaluating the same hl.monitor() call the config uses.
@@ -45,6 +98,7 @@ apply() {
   echo "$now" >"$STATE_FILE"
 
   if [[ "$now" == "battery" ]]; then
+    session_open
     # Remember the current brightness so AC can restore it — but only when it
     # is actually brighter than the battery target. On a battery boot the screen
     # already comes up dimmed (systemd-backlight restores the last value), and
@@ -60,6 +114,7 @@ apply() {
     powerprofilesctl set power-saver 2>/dev/null
     brightnessctl set "${BAT_BRIGHTNESS}%" >/dev/null 2>&1
   else
+    session_close
     set_refresh "$AC_RATE"
     powerprofilesctl set balanced 2>/dev/null
     local restore="$AC_BRIGHTNESS_FALLBACK"
