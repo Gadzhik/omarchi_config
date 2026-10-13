@@ -2,7 +2,7 @@
 claude = "latest"
 codex = "latest"
 gh = "latest"
-node = "26.5.0"
+node = "26"
 pnpm = "10"
 
 [settings.upgrade]
