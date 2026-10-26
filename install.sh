@@ -141,6 +141,13 @@ if [[ -f $DIR/system/etc/sysctl.d/99-dirty-writeback.conf ]]; then
   sudo sysctl --system >/dev/null 2>&1 || warn "sysctl --system"
 fi
 
+# Idle power: the NMI watchdog wakes every core once a second for nothing.
+if [[ -f $DIR/system/etc/sysctl.d/99-nmi-watchdog.conf ]]; then
+  sudo install -Dm644 "$DIR/system/etc/sysctl.d/99-nmi-watchdog.conf" \
+                      /etc/sysctl.d/99-nmi-watchdog.conf
+  sudo sysctl --system >/dev/null 2>&1 || warn "sysctl --system"
+fi
+
 # Idle power: let PCI devices runtime-suspend, and switch PCIe ASPM off the
 # BIOS default. Neither is model-specific. Kernel leaves power/control=on for
 # every device whose driver does not opt in — on this machine that is both

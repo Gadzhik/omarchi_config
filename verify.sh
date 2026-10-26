@@ -208,7 +208,8 @@ done
 # ---------------------------------------------------------------------------
 head_ "Idle power: PCIe runtime PM and ASPM"
 # ---------------------------------------------------------------------------
-for f in /etc/udev/rules.d/99-pcie-runtime-pm.rules /etc/tmpfiles.d/99-pcie-aspm.conf; do
+for f in /etc/udev/rules.d/99-pcie-runtime-pm.rules /etc/tmpfiles.d/99-pcie-aspm.conf \
+         /etc/sysctl.d/99-nmi-watchdog.conf; do
   rel="system${f}"
   if [[ ! -e $f ]]; then
     bad "$f — missing"
@@ -247,6 +248,12 @@ for d in /sys/class/nvme/nvme[0-9]; do
     bad "$(basename "$d") ($model) runtime PM = on — will never enter D3"
   fi
 done
+
+if [[ "$(cat /proc/sys/kernel/nmi_watchdog 2>/dev/null)" == 0 ]]; then
+  ok "NMI watchdog off"
+else
+  bad "NMI watchdog on — run: sudo sysctl --system"
+fi
 
 ASPM=/sys/module/pcie_aspm/parameters/policy
 if [[ ! -r $ASPM ]]; then

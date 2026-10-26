@@ -25,7 +25,7 @@ omarchi_config/
 │   ├── etc/modprobe.d/…    # fan fix: blacklist bitland_mifs_wmi
 │   ├── etc/systemd/system/ # power-limit services
 │   ├── etc/systemd/logind.conf.d/ # lid closed on AC does not suspend
-│   ├── etc/sysctl.d/…      # dirty-page limits (no freeze on big copies)
+│   ├── etc/sysctl.d/…      # dirty-page limits (no freeze on big copies), NMI watchdog off
 │   ├── etc/tmpfiles.d/…    # PCIe ASPM policy = powersave
 │   ├── etc/udev/rules.d/…  # reapply PL1 on AC plug/unplug, bfq, PCI runtime PM
 │   └── usr/local/bin/…     # set-power-limit.sh
@@ -81,7 +81,7 @@ than falling back to foot), every thermal file and service, whether
 `bitland_mifs_wmi` is loaded, and whether PL1 matches the current power source. It also checks the idle-power
 settings: that both NVMe are on `power/control=auto` and that the PCIe ASPM policy
 really came up as `powersave` — that write fails silently if the firmware kept ASPM
-control for itself. On other hardware the thermal block reports as not-applicable
+control for itself — and that the NMI watchdog is off. On other hardware the thermal block reports as not-applicable
 instead of failing.
 
 ---
