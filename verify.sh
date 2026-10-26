@@ -52,6 +52,8 @@ fi
 
 for s in "$HOME"/.local/bin/*; do
   [[ -e $s ]] || continue
+  # env / env.fish are PATH snippets dropped by installers (uv, rustup) — sourced, not run
+  [[ $(basename "$s") == env || $(basename "$s") == env.fish ]] && continue
   [[ -x $s ]] || bad "$(basename "$s") is not executable"
 done
 
