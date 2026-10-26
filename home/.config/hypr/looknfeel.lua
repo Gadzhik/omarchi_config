@@ -4,9 +4,9 @@ local active_border_color = { colors = { "rgba(ff1744ff)", "rgba(ff4f9aff)" }, a
 
 hl.config({
   general = {
-    -- Near-flat gaps: screen real estate over breathing room.
-    gaps_in = 1,
-    gaps_out = 1,
+    -- No gaps: screen real estate over breathing room.
+    gaps_in = 0,
+    gaps_out = 0,
     border_size = 2,
 
     col = {
