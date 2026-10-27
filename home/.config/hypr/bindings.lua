@@ -20,6 +20,12 @@ o.bind("SUPER + SHIFT + W", "Typora", o.launch("typora --enable-wayland-ime"))
 o.bind("SUPER + D", "Show desktop (toggle)", bin .. "/toggle-show-desktop")
 o.bind("SUPER + SHIFT + I", "Battery idle (toggle)", bin .. "/battery-idle")
 
+-- Screenshot on CTRL + ` instead of PRINT. Named by keysym, but input.lua's
+-- resolve_binds_by_sym = false matches it by key position, so the same key
+-- (ё in the ru layout) triggers it under Cyrillic too.
+hl.unbind("PRINT")
+o.bind("CTRL + grave", "Screenshot", "omarchy-capture-screenshot")
+
 o.bind("SUPER + ALT + R", "Screenrecord (toggle)", "omarchy-capture-screenrecording")
 o.bind("SUPER + ALT + SHIFT + R", "Screenrecord with audio (toggle)", "omarchy-capture-screenrecording --with-desktop-audio")
 
